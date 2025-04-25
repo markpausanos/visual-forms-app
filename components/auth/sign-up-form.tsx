@@ -70,7 +70,7 @@ export function SignUpForm({
 		<div className={cn('flex flex-col gap-4', className)} {...props}>
 			<h1 className="text-center text-2xl font-bold">Create an account</h1>
 			<p className="text-muted-foreground text-center text-sm">
-				Enter your information to get started with Essence
+				Enter your information to get started with Visual Forms
 			</p>
 
 			<Form {...form}>
@@ -127,7 +127,7 @@ export function SignUpForm({
 
 			<div className="mt-4 text-center text-sm">
 				<span className="text-muted-foreground">Already have an account? </span>
-				<Link href="/login" className="text-accent hover:underline">
+				<Link href="/login" className="text-primary font-bold hover:underline">
 					Sign in
 				</Link>
 			</div>
