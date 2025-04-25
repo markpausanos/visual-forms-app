@@ -114,7 +114,10 @@ export function LoginForm() {
 				<span className="text-muted-foreground">
 					Don&apos;t have an account?{' '}
 				</span>
-				<Link href="sign-up" className="text-primary font-bold hover:underline">
+				<Link
+					href="/sign-up"
+					className="text-primary font-bold hover:underline"
+				>
 					Sign up
 				</Link>
 			</div>
