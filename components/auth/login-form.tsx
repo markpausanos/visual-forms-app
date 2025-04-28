@@ -146,7 +146,7 @@ export default function LoginForm() {
 				Sign in with Google
 			</Button>
 
-			<div className="mt-4 text-center text-sm">
+			<div className="mt-4 text-center text-xs">
 				<span className="text-muted-foreground">
 					Don&apos;t have an account?{' '}
 				</span>

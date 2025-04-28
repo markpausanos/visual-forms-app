@@ -12,6 +12,7 @@ import {
 	FormLabel,
 	FormMessage,
 } from '@/components/ui/form';
+import { Checkbox } from '@/components/ui/checkbox';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,47 +23,49 @@ import { toast } from 'sonner';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Checkbox } from '../ui/checkbox';
 
 const signUpSchema = z.object({
 	email: z.string().email({ message: 'Invalid email address' }),
 	password: z
 		.string()
-		.min(8, { message: 'Password must be at least 8 characters long' })
-		.regex(/[a-z]/, { message: 'Password must include a lowercase letter' })
-		.regex(/[A-Z]/, { message: 'Password must include an uppercase letter' })
-		.regex(/[0-9]/, { message: 'Password must include a number' })
+		.min(8, { message: 'At least 8 characters' })
+		.regex(/[a-z]/, { message: 'Must include a lowercase letter' })
+		.regex(/[A-Z]/, { message: 'Must include an uppercase letter' })
+		.regex(/[0-9]/, { message: 'Must include a number' })
 		.regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/, {
-			message: 'Password must include a special character',
+			message: 'Must include a special character',
 		}),
+	privacy: z
+		.boolean()
+		.refine((v) => v, { message: 'You must accept the privacy policy' }),
 });
+
+type SignUpData = z.infer<typeof signUpSchema>;
 
 export default function SignUpForm({
 	className,
 	...props
 }: React.ComponentPropsWithoutRef<'div'>) {
 	const router = useRouter();
-
-	const form = useForm<z.infer<typeof signUpSchema>>({
+	const form = useForm<SignUpData>({
 		resolver: zodResolver(signUpSchema),
 		defaultValues: {
 			email: '',
 			password: '',
+			privacy: false, // start unchecked
 		},
 	});
 
-	const [isLoading, setIsLoading] = useState<boolean>(false);
+	const [isLoading, setIsLoading] = useState(false);
 
-	const onSubmit = async (data: z.infer<typeof signUpSchema>) => {
+	const onSubmit = async (data: SignUpData) => {
 		setIsLoading(true);
-
 		try {
 			await signup(data);
-
 			toast.success('Email sent to verify your account');
 			router.push('/login');
-		} catch (error) {
-			console.error('Error signing up', error);
+		} catch (err) {
+			console.error(err);
 			toast.error('Failed to create account. Please try again.');
 		} finally {
 			setIsLoading(false);
@@ -71,6 +74,7 @@ export default function SignUpForm({
 
 	return (
 		<div className={cn('flex flex-col gap-6', className)} {...props}>
+			{/* Logo */}
 			<div className="w-32 h-8 mx-auto flex items-center justify-center">
 				<Image
 					src="/logo.svg"
@@ -80,6 +84,7 @@ export default function SignUpForm({
 					className="object-contain"
 				/>
 			</div>
+
 			<h1 className="text-center text-3xl font-bold">Create your account</h1>
 
 			<Form {...form}>
@@ -87,7 +92,7 @@ export default function SignUpForm({
 					onSubmit={form.handleSubmit(onSubmit)}
 					className="flex flex-col gap-4"
 				>
-					{/* Email Field */}
+					{/* Email */}
 					<FormField
 						control={form.control}
 						name="email"
@@ -97,7 +102,7 @@ export default function SignUpForm({
 								<FormControl>
 									<Input
 										icon={<MailIcon size={16} />}
-										placeholder="Email"
+										placeholder="Enter your email"
 										type="email"
 										{...field}
 									/>
@@ -107,7 +112,7 @@ export default function SignUpForm({
 						)}
 					/>
 
-					{/* Password Field */}
+					{/* Password */}
 					<FormField
 						control={form.control}
 						name="password"
@@ -118,7 +123,7 @@ export default function SignUpForm({
 									<Input
 										icon={<LockIcon size={16} />}
 										type="password"
-										placeholder="Password"
+										placeholder="••••••••"
 										{...field}
 									/>
 								</FormControl>
@@ -127,57 +132,78 @@ export default function SignUpForm({
 						)}
 					/>
 
-					{/* Confirmation Policy */}
-					<div className="flex flex-row items-center gap-2">
-						<Checkbox id="terms" />
-						<FormLabel className="text-xs gap-1">
-							Agree to our
-							<Link
-								href="/terms"
-								className="text-primary font-semibold underline"
-							>
-								Terms of Service
-							</Link>
-							and
-							<Link
-								href="/privacy"
-								className="text-primary font-semibold underline"
-							>
-								Privacy Policy
-							</Link>
-						</FormLabel>
-					</div>
+					{/* Privacy Policy */}
+					<FormField
+						control={form.control}
+						name="privacy"
+						render={({ field }) => (
+							<FormItem>
+								<FormControl>
+									<div className="flex items-start gap-2">
+										<Checkbox
+											id="privacy"
+											checked={field.value}
+											onCheckedChange={field.onChange}
+										/>
+										<FormLabel
+											htmlFor="privacy"
+											className="text-xs flex-1 gap-1"
+										>
+											Agree to the{' '}
+											<Link
+												href="/terms"
+												className="text-primary font-semibold underline"
+											>
+												Terms of Service
+											</Link>{' '}
+											and{' '}
+											<Link
+												href="/privacy"
+												className="text-primary font-semibold underline"
+											>
+												Privacy Policy
+											</Link>
+											.
+										</FormLabel>
+									</div>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
 
-					{/* Submit Button */}
+					{/* Submit */}
 					<Button disabled={isLoading} type="submit" className="w-full">
-						{!isLoading && <p>Create Account</p>}
-						{isLoading && <BeatLoader size={8} color="white" />}
+						{isLoading ? (
+							<BeatLoader size={8} color="white" />
+						) : (
+							'Create Account'
+						)}
 					</Button>
 				</form>
 			</Form>
 
 			{/* Divider */}
-			<div className="flex flex-row items-center justify-center gap-2">
-				<div className="h-[1px] w-full bg-muted" />
+			<div className="flex items-center justify-center gap-2">
+				<div className="h-px w-full bg-muted" />
 				<span className="text-sm text-muted-foreground">or</span>
-				<div className="h-[1px] w-full bg-muted" />
+				<div className="h-px w-full bg-muted" />
 			</div>
 
-			{/* Google Sign In Button */}
+			{/* Google */}
 			<Button
 				variant="outline"
 				className="w-full gap-2"
-				onClick={() => {
-					window.location.href = '/api/auth/signin/google';
-				}}
+				onClick={() => (window.location.href = '/api/auth/signin/google')}
 			>
-				<Image src={'/login/google.svg'} alt="Google" width={16} height={16} />
-				Create an account with Google
+				<Image src="/login/google.svg" alt="Google" width={16} height={16} />
+				Create account with Google
 			</Button>
 
-			<div className="mt-4 text-center text-sm">
+			{/* Sign in link */}
+			<div className="mt-4 text-center text-xs">
 				<span className="text-muted-foreground">Already have an account? </span>
-				<Link href="/login" className="text-primary font-bold hover:underline">
+				<Link href="/login" className="text-primary font-bold underline">
 					Sign in
 				</Link>
 			</div>

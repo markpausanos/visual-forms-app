@@ -98,7 +98,7 @@ export default function ForgotPasswordForm() {
 			</Form>
 
 			{/* Footer */}
-			<div className="mt-4 text-center text-sm">
+			<div className="mt-4 text-center text-xs">
 				<span className="text-muted-foreground">
 					Remembered your password?{' '}
 				</span>
