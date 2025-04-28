@@ -3,7 +3,13 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+} from '@/components/ui/form';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,6 +20,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { BeatLoader } from 'react-spinners';
+import Image from 'next/image';
 
 const loginSchema = z.object({
 	email: z.string().email({ message: 'Invalid email address' }),
@@ -52,13 +59,18 @@ export function LoginForm() {
 	};
 
 	return (
-		<div className="flex flex-col gap-4">
-			<h1 className="text-center text-2xl font-bold">
-				Welcome to Visual Forms
-			</h1>
-			<p className="text-muted-foreground text-center text-sm">
-				Enter your email below to login to your account
-			</p>
+		<div className="flex flex-col gap-6 w-full">
+			<div className="w-32 h-8 mx-auto flex items-center justify-center">
+				<Image
+					src="/logo.svg"
+					alt="Logo"
+					width={113}
+					height={24}
+					className="object-contain"
+				/>
+			</div>
+
+			<h1 className="text-center text-3xl font-bold">Sign In</h1>
 
 			<Form {...form}>
 				<form
@@ -71,10 +83,10 @@ export function LoginForm() {
 						name="email"
 						render={({ field }) => (
 							<FormItem>
+								<FormLabel className="text-xs">Email</FormLabel>
 								<FormControl>
 									<Input
-										icon={<MailIcon size={16} />}
-										placeholder="Email"
+										placeholder="Enter your email"
 										type="email"
 										{...field}
 									/>
@@ -89,12 +101,11 @@ export function LoginForm() {
 						name="password"
 						render={({ field }) => (
 							<FormItem>
-								<div className="flex items-center justify-between"></div>
+								<FormLabel className="text-xs">Password</FormLabel>
 								<FormControl>
 									<Input
-										icon={<LockIcon size={16} />}
 										type="password"
-										placeholder="Password"
+										placeholder="Enter your Password"
 										{...field}
 									/>
 								</FormControl>
@@ -102,22 +113,45 @@ export function LoginForm() {
 						)}
 					/>
 
+					<Link
+						href="/forgot-password"
+						className="text-xs font-semibold text-right text-primary underline"
+					>
+						Forgot password?
+					</Link>
+
 					{/* Submit Button */}
 					<Button disabled={isLoading} type="submit" className="w-full">
-						{!isLoading && <p>Login</p>}
+						{!isLoading && <p>Sign In</p>}
 						{isLoading && <BeatLoader size={8} color="white" />}
 					</Button>
 				</form>
 			</Form>
 
+			{/* Divider */}
+			<div className="flex flex-row items-center justify-center gap-2">
+				<div className="h-[1px] w-full bg-muted" />
+				<span className="text-sm text-muted-foreground">or</span>
+				<div className="h-[1px] w-full bg-muted" />
+			</div>
+
+			{/* Google Sign In Button */}
+			<Button
+				variant="outline"
+				className="w-full gap-2"
+				onClick={() => {
+					window.location.href = '/api/auth/signin/google';
+				}}
+			>
+				<Image src={'/login/google.svg'} alt="Google" width={16} height={16} />
+				Sign in with Google
+			</Button>
+
 			<div className="mt-4 text-center text-sm">
 				<span className="text-muted-foreground">
 					Don&apos;t have an account?{' '}
 				</span>
-				<Link
-					href="/sign-up"
-					className="text-primary font-bold hover:underline"
-				>
+				<Link href="/sign-up" className="text-primary font-bold underline">
 					Sign up
 				</Link>
 			</div>
