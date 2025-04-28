@@ -1,8 +1,7 @@
-import { type NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 
-import { redirect } from 'next/navigation';
 import { EmailOtpType } from '@supabase/supabase-js';
-import { createClient } from '@/lib/utils/supabase';
+import { createServerClient } from '@/lib/utils/supabase';
 
 export async function GET(request: NextRequest) {
 	const { searchParams } = new URL(request.url);
@@ -11,7 +10,7 @@ export async function GET(request: NextRequest) {
 	const next = searchParams.get('next') ?? '/';
 
 	if (token_hash && type) {
-		const supabase = createClient();
+		const supabase = await createServerClient();
 
 		const { error } = await supabase.auth.verifyOtp({
 			type,
@@ -19,10 +18,10 @@ export async function GET(request: NextRequest) {
 		});
 		if (!error) {
 			// redirect user to specified redirect URL or root of app
-			redirect(next);
+			return NextResponse.redirect(new URL(next, request.url));
 		}
 	}
 
 	// redirect the user to an error page with some instructions
-	redirect('/error');
+	return NextResponse.redirect(new URL('/error', request.url));
 }
