@@ -13,7 +13,6 @@ import {
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { LockIcon, MailIcon } from 'lucide-react';
 import { login } from '@/actions/users';
 import { toast } from 'sonner';
 import { useState } from 'react';
@@ -105,7 +104,7 @@ export function LoginForm() {
 								<FormControl>
 									<Input
 										type="password"
-										placeholder="Enter your Password"
+										placeholder="Enter your password"
 										{...field}
 									/>
 								</FormControl>
