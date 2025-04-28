@@ -53,9 +53,7 @@ export async function logout() {
 
 export async function resetPassword(email: string) {
 	const supabase = await createServerClient();
-	const { error } = await supabase.auth.resetPasswordForEmail(email, {
-		redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/reset-password`,
-	});
+	const { error } = await supabase.auth.resetPasswordForEmail(email);
 
 	if (error) {
 		throw error;

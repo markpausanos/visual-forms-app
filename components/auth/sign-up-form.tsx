@@ -16,7 +16,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { LockIcon, MailIcon } from 'lucide-react';
 import { useState } from 'react';
 import { signup } from '@/actions/users';
 import { toast } from 'sonner';
@@ -101,7 +100,6 @@ export default function SignUpForm({
 								<FormLabel className="text-xs">Email</FormLabel>
 								<FormControl>
 									<Input
-										icon={<MailIcon size={16} />}
 										placeholder="Enter your email"
 										type="email"
 										{...field}
@@ -120,12 +118,7 @@ export default function SignUpForm({
 							<FormItem>
 								<FormLabel className="text-xs">Password</FormLabel>
 								<FormControl>
-									<Input
-										icon={<LockIcon size={16} />}
-										type="password"
-										placeholder="••••••••"
-										{...field}
-									/>
+									<Input type="password" placeholder="••••••••" {...field} />
 								</FormControl>
 								<FormMessage />
 							</FormItem>
