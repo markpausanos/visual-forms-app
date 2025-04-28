@@ -47,7 +47,7 @@ export default function ResetPasswordForm() {
 		try {
 			await updatePassword(data.password);
 			toast.success('Password reset! You can now sign in.');
-			router.push('/sign-in');
+			router.push('/login');
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : 'Reset failed');
 		} finally {
