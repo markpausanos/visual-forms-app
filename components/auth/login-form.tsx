@@ -28,7 +28,7 @@ const loginSchema = z.object({
 		.min(8, { message: 'Password must be at least 8 characters long' }),
 });
 
-export function LoginForm() {
+export default function LoginForm() {
 	const router = useRouter();
 	const form = useForm<z.infer<typeof loginSchema>>({
 		resolver: zodResolver(loginSchema),
@@ -146,7 +146,7 @@ export function LoginForm() {
 				Sign in with Google
 			</Button>
 
-			<div className="mt-4 text-center text-sm">
+			<div className="mt-4 text-center text-xs">
 				<span className="text-muted-foreground">
 					Don&apos;t have an account?{' '}
 				</span>

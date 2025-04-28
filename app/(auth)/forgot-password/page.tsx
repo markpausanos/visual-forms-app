@@ -1,14 +1,14 @@
 'use client';
 
-import LoginForm from '@/components/auth/login-form';
 import Image from 'next/image';
+import ForgotPasswordForm from '@/components/auth/forgot-password-form';
 
 export default function Page() {
 	return (
 		<main className="flex h-screen w-full">
 			<div className="z-100 w-full md:w-1/2 flex items-center justify-center bg-background px-6 py-8 md:px-16">
 				<div className="w-full max-w-sm">
-					<LoginForm />
+					<ForgotPasswordForm />
 				</div>
 			</div>
 
