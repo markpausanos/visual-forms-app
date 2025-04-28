@@ -9,6 +9,7 @@ import {
 	FormControl,
 	FormField,
 	FormItem,
+	FormLabel,
 	FormMessage,
 } from '@/components/ui/form';
 import { z } from 'zod';
@@ -20,6 +21,8 @@ import { signup } from '@/actions/users';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { Checkbox } from '../ui/checkbox';
 
 const signUpSchema = z.object({
 	email: z.string().email({ message: 'Invalid email address' }),
@@ -34,7 +37,7 @@ const signUpSchema = z.object({
 		}),
 });
 
-export function SignUpForm({
+export default function SignUpForm({
 	className,
 	...props
 }: React.ComponentPropsWithoutRef<'div'>) {
@@ -67,11 +70,17 @@ export function SignUpForm({
 	};
 
 	return (
-		<div className={cn('flex flex-col gap-4', className)} {...props}>
-			<h1 className="text-center text-2xl font-bold">Create an account</h1>
-			<p className="text-muted-foreground text-center text-sm">
-				Enter your information to get started with Visual Forms
-			</p>
+		<div className={cn('flex flex-col gap-6', className)} {...props}>
+			<div className="w-32 h-8 mx-auto flex items-center justify-center">
+				<Image
+					src="/logo.svg"
+					alt="Logo"
+					width={113}
+					height={24}
+					className="object-contain"
+				/>
+			</div>
+			<h1 className="text-center text-3xl font-bold">Create your account</h1>
 
 			<Form {...form}>
 				<form
@@ -84,6 +93,7 @@ export function SignUpForm({
 						name="email"
 						render={({ field }) => (
 							<FormItem>
+								<FormLabel className="text-xs">Email</FormLabel>
 								<FormControl>
 									<Input
 										icon={<MailIcon size={16} />}
@@ -103,7 +113,7 @@ export function SignUpForm({
 						name="password"
 						render={({ field }) => (
 							<FormItem>
-								<div className="flex items-center justify-between"></div>
+								<FormLabel className="text-xs">Password</FormLabel>
 								<FormControl>
 									<Input
 										icon={<LockIcon size={16} />}
@@ -117,6 +127,27 @@ export function SignUpForm({
 						)}
 					/>
 
+					{/* Confirmation Policy */}
+					<div className="flex flex-row items-center gap-2">
+						<Checkbox id="terms" />
+						<FormLabel className="text-xs gap-1">
+							Agree to our
+							<Link
+								href="/terms"
+								className="text-primary font-semibold underline"
+							>
+								Terms of Service
+							</Link>
+							and
+							<Link
+								href="/privacy"
+								className="text-primary font-semibold underline"
+							>
+								Privacy Policy
+							</Link>
+						</FormLabel>
+					</div>
+
 					{/* Submit Button */}
 					<Button disabled={isLoading} type="submit" className="w-full">
 						{!isLoading && <p>Create Account</p>}
@@ -124,6 +155,25 @@ export function SignUpForm({
 					</Button>
 				</form>
 			</Form>
+
+			{/* Divider */}
+			<div className="flex flex-row items-center justify-center gap-2">
+				<div className="h-[1px] w-full bg-muted" />
+				<span className="text-sm text-muted-foreground">or</span>
+				<div className="h-[1px] w-full bg-muted" />
+			</div>
+
+			{/* Google Sign In Button */}
+			<Button
+				variant="outline"
+				className="w-full gap-2"
+				onClick={() => {
+					window.location.href = '/api/auth/signin/google';
+				}}
+			>
+				<Image src={'/login/google.svg'} alt="Google" width={16} height={16} />
+				Create an account with Google
+			</Button>
 
 			<div className="mt-4 text-center text-sm">
 				<span className="text-muted-foreground">Already have an account? </span>

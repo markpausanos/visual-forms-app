@@ -40,7 +40,13 @@ export default async function updateSession(request: NextRequest) {
 		data: { user },
 	} = await supabase.auth.getUser();
 
-	const PUBLIC_ROUTES = ['/login', '/auth', '/sign-up', '/error'];
+	const PUBLIC_ROUTES = [
+		'/login',
+		'/auth',
+		'/sign-up',
+		'/forgot-password',
+		'/error',
+	];
 
 	const currentPath = request.nextUrl.pathname;
 	const isPublicRoute = PUBLIC_ROUTES.some((route) =>

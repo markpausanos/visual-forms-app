@@ -28,7 +28,7 @@ const loginSchema = z.object({
 		.min(8, { message: 'Password must be at least 8 characters long' }),
 });
 
-export function LoginForm() {
+export default function LoginForm() {
 	const router = useRouter();
 	const form = useForm<z.infer<typeof loginSchema>>({
 		resolver: zodResolver(loginSchema),
