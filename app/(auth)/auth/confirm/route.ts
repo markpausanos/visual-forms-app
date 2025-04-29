@@ -9,7 +9,6 @@ export async function GET(request: NextRequest) {
 	const type = searchParams.get('type') as EmailOtpType | null;
 	const next = searchParams.get('next') ?? '/';
 
-
 	const redirectTo = new URL(process.env.NEXT_PUBLIC_APP_URL || '');
 
 	redirectTo.pathname = next;

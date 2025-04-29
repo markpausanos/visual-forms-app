@@ -18,7 +18,6 @@ export async function login(user: UserLoginSignup) {
 
 export async function signup(user: UserLoginSignup) {
 	const supabase = await createServerClient();
-	console.log('user', user);
 	const { error } = await supabase.auth.signUp({
 		email: user.email,
 		password: user.password,

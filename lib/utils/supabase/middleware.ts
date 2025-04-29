@@ -49,7 +49,6 @@ export default async function updateSession(request: NextRequest) {
 	];
 
 	const currentPath = request.nextUrl.pathname;
-	console.log(currentPath);
 
 	const isPublicRoute = PUBLIC_ROUTES.some((route) =>
 		currentPath.startsWith(route)
