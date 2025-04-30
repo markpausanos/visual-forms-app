@@ -14,7 +14,6 @@ type Props = {
 export default function DashboardCardVertical({
 	title,
 	type,
-	author,
 	image,
 }: Props) {
 	return (
