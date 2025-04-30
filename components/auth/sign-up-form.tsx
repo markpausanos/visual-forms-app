@@ -61,6 +61,7 @@ export default function SignUpForm({
 		setIsLoading(true);
 		try {
 			await signup(data);
+
 			toast.success('Email sent to verify your account');
 			router.push('/login');
 		} catch (err) {

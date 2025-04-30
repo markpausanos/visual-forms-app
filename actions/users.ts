@@ -14,6 +14,8 @@ export async function login(user: UserLoginSignup) {
 	if (error) {
 		throw error;
 	}
+
+	return await getUser();
 }
 
 export async function signup(user: UserLoginSignup) {
@@ -26,6 +28,8 @@ export async function signup(user: UserLoginSignup) {
 	if (error) {
 		throw error;
 	}
+
+	return await getUser();
 }
 
 export async function getUser() {
@@ -68,4 +72,6 @@ export async function updatePassword(password: string) {
 	if (error) {
 		throw error;
 	}
+
+	return await getUser();
 }
