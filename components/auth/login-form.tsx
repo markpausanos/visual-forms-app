@@ -20,6 +20,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { BeatLoader } from 'react-spinners';
 import Image from 'next/image';
+import { createWorkspace, getWorkspaces } from '@/actions/workspace';
 
 const loginSchema = z.object({
 	email: z.string().email({ message: 'Invalid email address' }),
@@ -44,8 +45,21 @@ export default function LoginForm() {
 		setIsLoading(true);
 
 		try {
-			await login(data);
-			router.push('/dashboard');
+			const { user } = await login(data);
+
+			const workspaces = await getWorkspaces();
+
+			console.log(workspaces);
+
+			if (workspaces.length === 0) {
+				const workspace = await createWorkspace({
+					name: 'My Workspace',
+					user_id: user.id,
+				});
+				return router.push(`/workspaces/${workspace.id}`);
+			}
+
+			return router.push(`/workspaces/${workspaces[0].id}`);
 		} catch (error) {
 			if (error instanceof Error) {
 				toast.error(error.message);
