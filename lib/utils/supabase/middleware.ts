@@ -61,6 +61,13 @@ export default async function updateSession(request: NextRequest) {
 		return NextResponse.redirect(url);
 	}
 
+	if (user && isPublicRoute) {
+		// user is logged in, redirect to the dashboard
+		const url = request.nextUrl.clone();
+		url.pathname = '/workspaces';
+		return NextResponse.redirect(url);
+	}
+
 	// IMPORTANT: You *must* return the supabaseResponse object as it is.
 	// If you're creating a new response object with NextResponse.next() make sure to:
 	// 1. Pass the request in it, like so:
