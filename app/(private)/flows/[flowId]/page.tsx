@@ -15,7 +15,7 @@ import { useEffect, useState } from 'react';
 export default function Page() {
 	const params = useParams<{ flowId: string }>();
 
-	const [activeTab, setActiveTab] = useState('funnel');
+	// const [activeTab, setActiveTab] = useState('funnel');
 	const [activePage, setActivePage] = useState('start');
 	const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>(
 		'desktop'
