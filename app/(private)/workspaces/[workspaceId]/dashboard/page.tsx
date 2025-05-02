@@ -3,43 +3,22 @@
 import DashboardCardVertical from '@/components/dashboard/dashboard-card-vertical';
 import { Button } from '@/components/ui/button';
 import { Plus, Filter } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import DashboardCardHorizontal from '@/components/dashboard/dashboard-card-horizontal';
 import ViewModeToggle from '@/components/dashboard/view-mode-toggle';
 import { useParams, useRouter } from 'next/navigation';
 import { getUser } from '@/actions/users';
 import { toast } from 'sonner';
-import { createFlow } from '@/actions/flows';
+import { createFlow, getFlows } from '@/actions/flows';
 import { v4 as uuidv4 } from 'uuid';
-
-const cards = [
-	{
-		title: 'Die Bedeutung von Business Präsentationen',
-		subtitle: 'Privat',
-		author: 'RL',
-	},
-	{
-		title: 'Performance Creatives für deine Marke',
-		subtitle: 'Privat',
-		author: 'RL',
-	},
-	{
-		title: 'VisualPioneers: Agenturportale, die Zeit Sparen',
-		subtitle: 'Privat',
-		author: 'RL',
-	},
-	{
-		title: 'Gamma Tips & Tricks',
-		subtitle: 'Privat',
-		author: 'RL',
-	},
-];
+import { Flow } from '@/lib/types/flow';
 
 export default function Page() {
 	const params = useParams<{ workspaceId: string }>();
 	const router = useRouter();
 
 	const [view, setView] = useState<'grid' | 'list'>('grid');
+	const [flows, setFlows] = useState<Flow[]>([]);
 
 	const handleCreateNewFlow = async () => {
 		try {
@@ -91,6 +70,28 @@ export default function Page() {
 		}
 	};
 
+	useEffect(() => {
+		const fetchFlows = async () => {
+			try {
+				const flowsData = await getFlows(params.workspaceId);
+				setFlows(flowsData);
+				console.log(flowsData);
+			} catch {
+				toast.error('Error fetching flows');
+			}
+		};
+
+		fetchFlows();
+	}, [params.workspaceId]);
+
+	if (!flows) {
+		return (
+			<div className="flex items-center justify-center w-full h-full">
+				<p className="text-lg">Loading...</p>
+			</div>
+		);
+	}
+
 	return (
 		<div className="p-6 space-y-6 w-full">
 			<div className="flex flex-wrap items-center justify-between gap-4">
@@ -115,14 +116,14 @@ export default function Page() {
 
 			{view === 'grid' && (
 				<div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-					{cards.map((card, idx) => {
+					{flows.map((card, idx) => {
 						return (
 							<DashboardCardVertical
 								key={idx}
+								id={card.id}
 								title={card.title}
-								type={card.subtitle}
-								author={card.author}
-								image={''}
+								type={'Flow'}
+								status={card.published_url !== null ? 'published' : 'draft'}
 							/>
 						);
 					})}
@@ -131,14 +132,14 @@ export default function Page() {
 
 			{view === 'list' && (
 				<div className="flex flex-col gap-4">
-					{cards.map((card, idx) => {
+					{flows.map((card, idx) => {
 						return (
 							<DashboardCardHorizontal
 								key={idx}
+								id={card.id}
 								title={card.title}
-								subtitle={card.subtitle}
-								author={card.author}
-								image={''}
+								type={'Flow'}
+								status={card.published_url !== null ? 'published' : 'draft'}
 							/>
 						);
 					})}
