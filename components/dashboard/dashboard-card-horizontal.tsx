@@ -1,78 +1,85 @@
-import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card';
-import { Ellipsis, Lock } from 'lucide-react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
+import { ArrowUpRight, Link as LinkIcon, Settings } from 'lucide-react';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { getRandomInt } from '@/lib/utils';
+import NextLink from 'next/link';
 
 type Props = {
+	id: string;
 	title: string;
-	subtitle: string;
-	author: string;
-	image: string;
+	type: string;
+	image?: string;
+	status: 'draft' | 'published';
 };
 
 export default function DashboardCardHorizontal({
+	id,
 	title,
-	subtitle,
-	author,
+	type,
 	image,
+	status,
 }: Props) {
+	const imageUrl = image ?? `/flow-images/image-${getRandomInt(1, 3)}.jpg`;
+
 	return (
-		<Card className="flex flex-row overflow-hidden hover:shadow-md transition-shadow cursor-pointer p-0">
-			<div className="w-40 h-auto shrink-0 relative">
-				<Image
-					src={image || '/cat.jpeg'}
-					alt={title}
-					fill
-					className="object-cover"
-				/>
-			</div>
+		<NextLink href={`/flows/${id}`}>
+			<Card className="flex flex-row overflow-hidden hover:shadow-md transition-shadow cursor-pointer p-0">
+				{/* Image + overlays */}
+				<div className="relative w-40 h-32 shrink-0">
+					<Image src={imageUrl} alt={title} fill className="object-cover" />
 
-			<div className="flex flex-col flex-1 justify-between">
-				<CardTitle className="px-4 pt-4 font-light text-lg">{title}</CardTitle>
-
-				<CardContent className="p-4 pt-2">
-					<Badge
-						variant="outline"
-						className="text-sm text-muted-foreground flex items-center gap-1 mb-1"
-					>
-						<Lock size={14} />
-						{subtitle}
-					</Badge>
-					<h3 className="font-semibold leading-snug text-base line-clamp-2">
-						{title}
-					</h3>
-				</CardContent>
-
-				<CardFooter className="flex items-center justify-between px-4 pb-4 pt-0 text-sm text-muted-foreground">
-					<div className="flex items-center gap-2">
-						<Avatar className="h-6 w-6">
-							<AvatarFallback>{author}</AvatarFallback>
-						</Avatar>
-						<span>Erstellt von Ihnen</span>
+					{/* Type badge */}
+					<div className="absolute top-3 left-3 z-10">
+						<Badge className="rounded-full px-2 py-1 text-xs bg-white/70 text-foreground backdrop-blur-sm">
+							{type}
+						</Badge>
 					</div>
 
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button variant="ghost" className="p-1 hover:bg-muted rounded">
-								<span className="sr-only">Open menu</span>
-								<Ellipsis className="h-4 w-4 text-muted-foreground" />
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end">
-							<DropdownMenuItem>Edit</DropdownMenuItem>
-							<DropdownMenuItem>Delete</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
-				</CardFooter>
-			</div>
-		</Card>
+					{/* Link / Settings buttons */}
+					<div className="absolute top-2 right-2 z-10 flex items-center gap-2">
+						<Button
+							size="icon"
+							variant="secondary"
+							className="rounded-full bg-background"
+						>
+							<LinkIcon className="h-4 w-4 text-muted-foreground" />
+						</Button>
+						<Button
+							size="icon"
+							variant="secondary"
+							className="rounded-full bg-background"
+						>
+							<Settings className="h-4 w-4 text-muted-foreground" />
+						</Button>
+					</div>
+				</div>
+
+				{/* Main content */}
+				<CardContent className="space-y-2 py-4 px-4 flex-1">
+					{/* Title + arrow */}
+					<div className="flex items-center justify-between">
+						<CardTitle className="text-base font-semibold">{title}</CardTitle>
+						<ArrowUpRight size={28} className="text-muted-foreground" />
+					</div>
+
+					{/* Status badge */}
+					<Badge
+						variant="outline"
+						className={`text-xs px-2 py-0.5 rounded-full w-fit ${
+							status === 'draft'
+								? 'bg-muted text-muted-foreground'
+								: 'bg-emerald-100 text-emerald-700'
+						}`}
+					>
+						● {status === 'draft' ? 'Draft' : 'Published'}
+					</Badge>
+
+					{/* Submissions */}
+					<div className="text-sm text-muted-foreground">8 Submissions</div>
+				</CardContent>
+			</Card>
+		</NextLink>
 	);
 }
