@@ -7,7 +7,7 @@ export async function createFlow(
 	workspaceId: string,
 	userId: string,
 	json: object
-) {
+): Promise<Flow> {
 	const supabase = await createServerClient();
 
 	const { data, error } = await supabase
@@ -28,7 +28,7 @@ export async function createFlow(
 	return getFlowById(data.id);
 }
 
-export async function getFlows(workspaceId: string) {
+export async function getFlows(workspaceId: string): Promise<Flow[]> {
 	const supabase = await createServerClient();
 
 	const { data, error } = await supabase
@@ -44,7 +44,7 @@ export async function getFlows(workspaceId: string) {
 	return data as Flow[];
 }
 
-export async function getFlowById(flowId: string) {
+export async function getFlowById(flowId: string): Promise<Flow> {
 	const supabase = await createServerClient();
 
 	const { data, error } = await supabase
@@ -56,6 +56,27 @@ export async function getFlowById(flowId: string) {
 	if (error) {
 		console.error('Error fetching flow:', error);
 		throw new Error('Failed to fetch flow');
+	}
+
+	return data as Flow;
+}
+
+export async function updateFlow(
+	flowId: string,
+	updatedData: Partial<Flow>
+): Promise<Flow> {
+	const supabase = await createServerClient();
+
+	const { data, error } = await supabase
+		.from('flows')
+		.update(updatedData)
+		.eq('id', flowId)
+		.select('*')
+		.single();
+
+	if (error) {
+		console.error('Error updating flow:', error);
+		throw new Error('Failed to update flow');
 	}
 
 	return data as Flow;

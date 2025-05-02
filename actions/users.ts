@@ -2,9 +2,10 @@
 
 import { UserLoginSignup } from '@/lib/types';
 import { createServerClient } from '@/lib/utils/supabase';
+import { User } from '@supabase/auth-js';
 import { redirect } from 'next/navigation';
 
-export async function login(user: UserLoginSignup) {
+export async function login(user: UserLoginSignup): Promise<{ user: User }> {
 	const supabase = await createServerClient();
 	const { error } = await supabase.auth.signInWithPassword({
 		email: user.email,
@@ -18,7 +19,7 @@ export async function login(user: UserLoginSignup) {
 	return await getUser();
 }
 
-export async function signup(user: UserLoginSignup) {
+export async function signup(user: UserLoginSignup): Promise<{ user: User }> {
 	const supabase = await createServerClient();
 	const { error } = await supabase.auth.signUp({
 		email: user.email,
@@ -32,7 +33,7 @@ export async function signup(user: UserLoginSignup) {
 	return await getUser();
 }
 
-export async function getUser() {
+export async function getUser(): Promise<{ user: User }> {
 	const supabase = await createServerClient();
 	const { data, error } = await supabase.auth.getUser();
 
@@ -63,7 +64,9 @@ export async function resetPassword(email: string) {
 	}
 }
 
-export async function updatePassword(password: string) {
+export async function updatePassword(
+	password: string
+): Promise<{ user: User }> {
 	const supabase = await createServerClient();
 	const { error } = await supabase.auth.updateUser({
 		password,
