@@ -10,6 +10,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { getUser } from '@/actions/users';
 import { toast } from 'sonner';
 import { createFlow } from '@/actions/flows';
+import { v4 as uuidv4 } from 'uuid';
 
 const cards = [
 	{
@@ -52,11 +53,11 @@ export default function Page() {
 				userId: user.id,
 				json: [
 					{
-						id: crypto.randomUUID(),
+						id: uuidv4(),
 						name: 'page-1',
 						blocks: [
 							{
-								id: crypto.randomUUID(),
+								id: uuidv4(),
 								type: 'Text',
 								props: {
 									tag: 'h1',
