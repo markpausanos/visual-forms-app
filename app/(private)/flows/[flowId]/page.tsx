@@ -1,70 +1,96 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { getFlowById, updateFlow } from '@/actions/flows';
-import { uploadJsonToStorage } from '@/actions/storage';
-import ElementToolbar from '@/components/flows/element-toolbar';
-import MainCanvas from '@/components/flows/main-canvas';
-import PageEditToolbar from '@/components/flows/page-edit-toolbar';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Settings, Send, Share2, HomeIcon } from 'lucide-react';
-import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import { getFlowById, updateFlow } from '@/actions/flows';
+import { uploadJsonToStorage } from '@/actions/storage';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Settings, Send, Share2, HomeIcon } from 'lucide-react';
+
+import ElementToolbar from '@/components/flows/element-toolbar';
+import MainCanvas from '@/components/flows/main-canvas';
+import PageEditToolbar from '@/components/flows/page-edit-toolbar';
+import { Page as FlowPage } from '@/components/blocks/componentMap';
+import { htmlToJSON } from '@/lib/tiptapHelpers';
+import { HtmlOnlyPage } from '@/lib/types/block';
+
 export default function Page() {
-	const params = useParams<{ flowId: string }>();
+	const { flowId } = useParams<{ flowId: string }>();
 	const router = useRouter();
 
-	// const [activeTab, setActiveTab] = useState('funnel');
-	const [activePage, setActivePage] = useState('start');
+	const [pages, setPages] = useState<FlowPage[]>([]);
+	const [activePageIndex, setActivePageIndex] = useState(0);
+	const [title, setTitle] = useState('Untitled');
+	const [isFetching, setIsFetching] = useState(true);
+	const [isPublishing, setIsPublishing] = useState(false);
 	const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>(
 		'desktop'
 	);
-	const [isFetching, setIsFetching] = useState(true);
+	const [selectedBlock, setSelectedBlock] = useState<{
+		id: string;
+		type: string;
+	} | null>(null);
 
-	const [title, setTitle] = useState('Untitled');
-	const [json, setJson] = useState<any[] | null>(null);
+	console.log(pages);
 
-	const [isPublishing, setIsPublishing] = useState(false);
+	useEffect(() => {
+		(async () => {
+			setIsFetching(true);
 
-	const page = json?.[0] ?? null;
+			try {
+				const flow = await getFlowById(flowId);
 
-	const updateFirstPage = (newPage: object | null) => {
-		if (!json || !newPage) return;
-		const updated = [newPage, ...json.slice(1)];
-		setJson(updated);
-	};
+				if (!flow) {
+					throw new Error('Flow not found');
+				}
+
+				const pagesWithJson: FlowPage[] = (
+					flow.saved_json as HtmlOnlyPage[]
+				).map((page) => ({
+					id: page.id,
+					name: page.name,
+					blocks: page.blocks.map((block) => ({
+						id: block.id,
+						type: block.type,
+						props: {
+							html: block.props.html,
+							json: htmlToJSON(block.props.html),
+						},
+					})),
+				}));
+
+				setTitle(flow.title || 'Untitled');
+				setPages(pagesWithJson);
+			} catch (error) {
+				console.error('Error fetching flow:', error);
+				toast.error('Failed to load flow');
+			} finally {
+				setIsFetching(false);
+			}
+		})();
+	}, [flowId]);
 
 	const handlePublish = async () => {
-		if (isPublishing) return;
+		if (isPublishing || !pages) return;
 		setIsPublishing(true);
-		if (!json) return;
 
 		try {
-			const flowId = params.flowId;
-			const fullPath = await uploadJsonToStorage(json, flowId);
+			const fullPath = await uploadJsonToStorage(pages, flowId);
+			if (!fullPath) throw new Error('upload failed');
 
-			if (!fullPath) {
-				toast.error('Failed to upload JSON');
-				return;
-			}
-
-			const updatedFlow = await updateFlow(flowId, {
-				saved_json: json,
+			const updated = await updateFlow(flowId, {
+				saved_json: pages,
 				published_url: fullPath,
 			});
-
-			if (!updatedFlow) {
-				toast.error('Failed to update flow');
-				return;
-			}
+			if (!updated) throw new Error('update failed');
 
 			toast.success('Flow published successfully');
-
-			router.push(`/${updatedFlow.published_url}`);
+			router.push(`/${updated.published_url}`);
 		} catch {
 			toast.error('Failed to publish flow');
 		} finally {
@@ -72,27 +98,31 @@ export default function Page() {
 		}
 	};
 
-	useEffect(() => {
-		setIsFetching(true);
-		const fetchFlow = async () => {
-			const flow = await getFlowById(params.flowId);
-			if (!flow) {
-				toast.error('Failed to fetch flow');
-				return;
-			}
+	const handleUpdateBlock = (
+		blockId: string,
+		newProps: Record<string, unknown>
+	) => {
+		if (!pages) return;
+		setPages((current) =>
+			current.map((page, idx) => {
+				if (idx !== activePageIndex) return page;
+				return {
+					...page,
+					blocks: page.blocks.map((block) =>
+						block.id === blockId
+							? { ...block, props: { ...block.props, ...newProps } }
+							: block
+					),
+				};
+			})
+		);
+	};
 
-			setTitle(flow.title);
-			if (Array.isArray(flow.saved_json)) {
-				setJson(flow.saved_json);
-			}
-			setIsFetching(false);
-		};
-
-		fetchFlow();
-	}, []);
+	const activePage = pages?.[activePageIndex] ?? null;
 
 	return (
 		<div className="flex flex-col h-screen bg-background">
+			{/* header */}
 			<header className="border-b border-muted bg-background py-4 px-4">
 				<div className="flex items-center justify-between">
 					<div className="flex items-center flex-row gap-4">
@@ -133,17 +163,27 @@ export default function Page() {
 				</div>
 			</header>
 
+			{/* body */}
 			<div className="flex flex-1 overflow-hidden">
 				<ElementToolbar />
+
 				<MainCanvas
-					json={page}
-					setJson={updateFirstPage}
+					page={activePage}
+					pages={pages}
+					setPages={setPages}
+					activePageIndex={activePageIndex}
+					setActivePageIndex={setActivePageIndex}
 					previewMode={previewMode}
-					onPreviewModeChange={(mode) => setPreviewMode(mode)}
+					onPreviewModeChange={setPreviewMode}
+					onSelectBlock={setSelectedBlock}
 				/>
+
 				<PageEditToolbar
-					activePage={activePage}
-					setActivePage={setActivePage}
+					pages={pages ?? []}
+					activePage={activePageIndex}
+					setActivePage={setActivePageIndex}
+					selectedBlock={selectedBlock}
+					onUpdateBlock={handleUpdateBlock}
 				/>
 			</div>
 		</div>

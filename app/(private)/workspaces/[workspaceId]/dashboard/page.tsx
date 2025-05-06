@@ -27,25 +27,20 @@ export default function Page() {
 			if (!user) {
 				throw new Error('User not found');
 			}
+
 			const flow = {
 				workspaceId: params.workspaceId,
 				userId: user.id,
 				json: [
 					{
 						id: uuidv4(),
-						name: 'page-1',
+						name: 'Welcome Page',
 						blocks: [
 							{
 								id: uuidv4(),
 								type: 'Text',
 								props: {
-									tag: 'h1',
-									text: 'Hello World!',
-									styles: {
-										size: '3xl',
-										bold: true,
-										align: 'center',
-									},
+									html: '<p>Welcome to my <strong><em>flow builder</em></strong>!</p>',
 								},
 							},
 						],
