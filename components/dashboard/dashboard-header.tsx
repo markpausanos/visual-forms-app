@@ -21,7 +21,7 @@ export default function DashboardHeader() {
 						icon={<Search className="w-4 h-4" />}
 						type="search"
 						placeholder="Search"
-						className="rounded-full px-3"
+						className="rounded-full"
 					/>
 				</div>
 

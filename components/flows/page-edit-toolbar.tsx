@@ -37,6 +37,8 @@ export default function PageEditToolbar({
 	useEffect(() => {
 		if (selectedBlock) {
 			setActiveTab('edit');
+		} else {
+			setActiveTab('pages');
 		}
 	}, [selectedBlock]);
 
