@@ -5,7 +5,7 @@ export const blockToolbars: Record<
 	string,
 	React.ComponentType<{
 		block: Block;
-		onChange: (updated: Block) => void;
+		onChange: (id: string, html: string) => void;
 	}>
 > = {
 	Text: TextBlockToolbarWrapper,

@@ -10,30 +10,39 @@ import {
 	ChevronDown,
 	AlignRight,
 } from 'lucide-react';
+import { useCallback } from 'react';
 
-export function TextBlockToolbarWrapper({ block }: { block: Block }) {
+export function TextBlockToolbarWrapper({
+	block,
+	onChange,
+}: {
+	block: Block;
+	onChange: (id: string, html: string) => void;
+}) {
 	const editor =
 		typeof window !== 'undefined'
 			? window.tiptapEditors?.[block.id]
 			: undefined;
 
+	const commitChange = useCallback(() => {
+		if (!editor) return;
+		const html = editor.getHTML();
+		onChange(block.id, html);
+	}, [block.id, editor, onChange]);
+
 	if (!editor) return null;
 
 	// determine exactly which alignment is active
-	const align = editor.isActive('textAlign', { align: 'left' })
-		? 'left'
-		: editor.isActive('textAlign', { align: 'center' })
-			? 'center'
-			: editor.isActive('textAlign', { align: 'right' })
-				? 'right'
-				: 'left';
+	const alignAttr = editor.getAttributes('textAlign')?.align || 'left';
+
+	console.log('alignAttr', alignAttr);
 
 	const textFormatState = {
 		bold: editor.isActive('bold'),
 		italic: editor.isActive('italic'),
 		underline: editor.isActive('underline'),
-		align,
 		size: (editor.getAttributes('textStyle').fontSize as string) || 'md',
+		align: alignAttr,
 	};
 
 	const handleTextFormat = (key: string, value: any) => {
@@ -67,7 +76,7 @@ export function TextBlockToolbarWrapper({ block }: { block: Block }) {
 					.run();
 				break;
 		}
-		// onUpdate in TextBlock will push JSON/html back into your pages state
+		commitChange();
 	};
 
 	return (
@@ -103,7 +112,7 @@ export default function TextBlockToolbar({
 						<Button
 							key={sz}
 							variant="outline"
-							className={`rounded-full ${textFormatState.size === sz ? 'bg-background text-foreground' : ''}`}
+							className={`rounded-full ${textFormatState.size === sz ? 'bg-foreground text-background' : ''}`}
 							onClick={() => handleTextFormat('size', sz)}
 						>
 							{sz.toUpperCase()}
@@ -116,21 +125,21 @@ export default function TextBlockToolbar({
 			<div className="grid grid-cols-3 gap-2">
 				<Button
 					variant="outline"
-					className={`rounded-full font-bold ${textFormatState.bold ? 'bg-background text-foreground' : ''}`}
+					className={`rounded-full font-bold ${textFormatState.bold ? 'bg-foreground text-background' : ''}`}
 					onClick={() => handleTextFormat('bold', true)}
 				>
 					B
 				</Button>
 				<Button
 					variant="outline"
-					className={`rounded-full italic ${textFormatState.italic ? 'bg-background text-foreground' : ''}`}
+					className={`rounded-full italic ${textFormatState.italic ? 'bg-foreground text-background' : ''}`}
 					onClick={() => handleTextFormat('italic', true)}
 				>
 					I
 				</Button>
 				<Button
 					variant="outline"
-					className={`rounded-full underline ${textFormatState.underline ? 'bg-background text-foreground' : ''}`}
+					className={`rounded-full underline ${textFormatState.underline ? 'bg-foreground text-background' : ''}`}
 					onClick={() => handleTextFormat('underline', true)}
 				>
 					U
@@ -143,21 +152,21 @@ export default function TextBlockToolbar({
 				<div className="grid grid-cols-3 gap-2">
 					<Button
 						variant="outline"
-						className={`rounded-full ${textFormatState.align === 'left' ? 'bg-background text-foreground' : ''}`}
+						className={`rounded-full ${textFormatState.align === 'left' ? 'bg-foreground text-background' : ''}`}
 						onClick={() => handleTextFormat('align', 'left')}
 					>
 						<AlignLeft size={16} />
 					</Button>
 					<Button
 						variant="outline"
-						className={`rounded-full ${textFormatState.align === 'center' ? 'bg-background text-foreground' : ''}`}
+						className={`rounded-full ${textFormatState.align === 'center' ? 'bg-foreground text-background' : ''}`}
 						onClick={() => handleTextFormat('align', 'center')}
 					>
 						<AlignCenter size={16} />
 					</Button>
 					<Button
 						variant="outline"
-						className={`rounded-full ${textFormatState.align === 'right' ? 'bg-background text-foreground' : ''}`}
+						className={`rounded-full ${textFormatState.align === 'right' ? 'bg-foreground text-background' : ''}`}
 						onClick={() => handleTextFormat('align', 'right')}
 					>
 						<AlignRight size={16} />

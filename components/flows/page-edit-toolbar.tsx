@@ -20,7 +20,7 @@ interface Props {
 		id: string;
 		type: string;
 	} | null;
-	onUpdateBlock?: (id: string, props: Record<string, unknown>) => void;
+	onUpdateBlock?: (id: string, html: string) => void;
 }
 
 export default function PageEditToolbar({
@@ -66,8 +66,8 @@ export default function PageEditToolbar({
 									return Toolbar ? (
 										<Toolbar
 											block={currentBlock}
-											onChange={(updated) =>
-												onUpdateBlock?.(updated.id, updated.props)
+											onChange={(id, html) =>
+												onUpdateBlock?.(id, html)
 											}
 										/>
 									) : (

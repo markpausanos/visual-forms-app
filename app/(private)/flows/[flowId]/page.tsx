@@ -96,11 +96,7 @@ export default function Page() {
 		}
 	};
 
-	const handleUpdateBlock = (
-		blockId: string,
-		newProps: Record<string, unknown>
-	) => {
-		if (!pages) return;
+	const handleUpdateBlock = (blockId: string, newHtml: string) => {
 		setPages((current) =>
 			current.map((page, idx) => {
 				if (idx !== activePageIndex) return page;
@@ -108,7 +104,10 @@ export default function Page() {
 					...page,
 					blocks: page.blocks.map((block) =>
 						block.id === blockId
-							? { ...block, props: { ...block.props, ...newProps } }
+							? {
+									...block,
+									props: { html: newHtml, json: htmlToJSON(newHtml) },
+								}
 							: block
 					),
 				};

@@ -1,7 +1,5 @@
 'use client';
 
-import { Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Block, componentMap, Page } from '../blocks/componentMap';
 import PreviewModeToggle from './preview-mode-toggle';
@@ -92,23 +90,6 @@ export default function MainCanvas({
 						</div>
 					);
 				})}
-
-				{/* "Add section" button */}
-				<div
-					className="w-full h-64 flex items-center justify-center border-2 border-muted-foreground/20 rounded-md mt-4"
-					onClick={(e) => e.stopPropagation()}
-				>
-					<Button
-						variant="ghost"
-						className="flex flex-col items-center gap-2 hover:bg-white"
-						onClick={() => {
-							/* insert a new default Text block into page.blocks */
-						}}
-					>
-						<Plus size={24} className="text-gray-400" />
-						<span className="text-muted-foreground">Add section</span>
-					</Button>
-				</div>
 			</div>
 
 			{/* preview toggle */}
