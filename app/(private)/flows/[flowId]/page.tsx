@@ -12,10 +12,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Settings, Send, Share2, HomeIcon } from 'lucide-react';
 
-import ElementToolbar from '@/components/flows/element-toolbar';
+import MainToolbar from '@/components/flows/main-toolbar';
 import MainCanvas from '@/components/flows/main-canvas';
 import PageEditToolbar from '@/components/flows/page-edit-toolbar';
-import { Page as FlowPage } from '@/components/blocks/componentMap';
+import { Block, Page as FlowPage } from '@/components/blocks/componentMap';
 import { htmlToJSON } from '@/lib/tiptapHelpers';
 import { HtmlOnlyPage } from '@/lib/types/block';
 
@@ -35,8 +35,6 @@ export default function Page() {
 		id: string;
 		type: string;
 	} | null>(null);
-
-	console.log(pages);
 
 	useEffect(() => {
 		(async () => {
@@ -136,8 +134,8 @@ export default function Page() {
 							value={title}
 							onChange={(e) => setTitle(e.target.value)}
 							placeholder="Untitled"
-							className="p-0
-							border-0 border-b border-muted bg-transparent rounded-none shadow-none focus-visible:ring-0 focus:border-primary"
+							className="border-b"
+							inputClassName="bg-background border-none border focus:border-none focus:ring-0 focus:outline-none placeholder:text-muted-foreground"
 						/>
 					</div>
 					<div className="flex items-center space-x-3">
@@ -165,7 +163,18 @@ export default function Page() {
 
 			{/* body */}
 			<div className="flex flex-1 overflow-hidden">
-				<ElementToolbar />
+				<MainToolbar
+					onAddElement={(block: Block) => {
+						setPages((pages) => {
+							const next = [...pages];
+							next[activePageIndex] = {
+								...next[activePageIndex],
+								blocks: [...next[activePageIndex].blocks, block],
+							};
+							return next;
+						});
+					}}
+				/>
 
 				<MainCanvas
 					page={activePage}
