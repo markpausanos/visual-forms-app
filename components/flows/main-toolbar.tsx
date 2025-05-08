@@ -52,7 +52,7 @@ export default function MainToolbar({
 
 	return (
 		<div className="flex h-full relative">
-			<div className="w-24 max-w-24 border-r flex flex-col items-center py-6 px-2 bg-white">
+			<div className="w-24 max-w-24 border-r flex flex-col items-center py-6 px bg-white">
 				<SidebarItem
 					icon={<Grid3X3 size={20} />}
 					label="Elements"
@@ -86,11 +86,16 @@ export default function MainToolbar({
 					onMouseLeave={handleMouseLeave}
 				/>
 			</div>
-			<ElementToolbar
-				isOpen={showElementToolbar}
-				onClose={handleCloseElementToolbar}
-				onAddElement={onAddElement}
-			/>
+			<div
+				onMouseEnter={() => handleMouseEnter('elements')}
+				onMouseLeave={handleMouseLeave}
+			>
+				<ElementToolbar
+					isOpen={showElementToolbar}
+					onClose={handleCloseElementToolbar}
+					onAddElement={onAddElement}
+				/>
+			</div>
 		</div>
 	);
 }
