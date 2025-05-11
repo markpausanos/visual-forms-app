@@ -122,7 +122,7 @@ function SidebarItem({
 			className={`flex flex-col items-center gap-1 py-3 w-full cursor-pointer
        		 ${active ? 'text-primary' : 'text-muted-foreground'} 
        		 hover:text-primary transition-colors duration-200
-			 hover:bg-muted rounded-md px-2
+			 hover:bg-muted
 			 `}
 			onMouseDown={onClick}
 			onMouseEnter={onMouseEnter}

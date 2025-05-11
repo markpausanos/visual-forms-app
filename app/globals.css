@@ -122,23 +122,23 @@
 }
 
 @layer utilities {
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
-  }
+	.custom-scrollbar::-webkit-scrollbar {
+		width: 8px;
+	}
 
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
+	.custom-scrollbar::-webkit-scrollbar-track {
+		background: transparent;
+	}
 
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: #d1d5db; /* Tailwind's slate-300 */
-    border-radius: 9999px;
-    border: 2px solid transparent;
-    background-clip: content-box;
-  }
+	.custom-scrollbar::-webkit-scrollbar-thumb {
+		background-color: #d1d5db; /* Tailwind's slate-300 */
+		border-radius: 9999px;
+		border: 2px solid transparent;
+		background-clip: content-box;
+	}
 
-  .custom-scrollbar {
-    scrollbar-color: #d1d5db transparent; /* For Firefox */
-    scrollbar-width: thin;
-  }
+	.custom-scrollbar {
+		scrollbar-color: #d1d5db transparent; /* For Firefox */
+		scrollbar-width: thin;
+	}
 }

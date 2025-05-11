@@ -35,7 +35,18 @@ export function createBlock(type: 'Text' | 'Image', payload: string): Block {
 					json: htmlToJSON(payload),
 				},
 			};
-
+		case 'Image':
+			return {
+				id: uuid(),
+				type: 'Image',
+				props: {
+					html: `<div class="image-container"><img src="${payload}" alt="Image" /></div>`,
+					json: `<div class="image-container"><img src="${payload}" alt="Image" /></div>`,
+					imageUrl: payload,
+					alt: 'Image',
+					aspectRatio: '4/3',
+				},
+			};
 		default:
 			throw new Error(`Unknown block type: ${type}`);
 	}

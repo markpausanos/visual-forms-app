@@ -8,7 +8,7 @@ import TextStyle from '@tiptap/extension-text-style';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
 import type { Block } from './componentMap';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function TextBlock({
 	block,
@@ -17,8 +17,10 @@ export default function TextBlock({
 	block: Block;
 	onChange: (updated: Block) => void;
 }) {
+	const [content, setContent] = useState(block.props.json);
+
 	const editor = useEditor({
-		content: block.props.json,
+		content: content,
 		editable: true,
 		extensions: [
 			StarterKit.configure({ heading: false }),
@@ -29,6 +31,9 @@ export default function TextBlock({
 			TextAlign.configure({ types: ['paragraph'] }),
 		],
 		onUpdate: ({ editor }) => {
+			setContent(editor.getJSON());
+		},
+		onBlur: ({ editor }) => {
 			const json = editor.getJSON();
 			const html = editor.getHTML();
 			onChange({

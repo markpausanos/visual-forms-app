@@ -31,6 +31,8 @@ export default function Page() {
 	const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>(
 		'desktop'
 	);
+
+	console.log(pages);
 	const [selectedBlock, setSelectedBlock] = useState<{
 		id: string;
 		type: string;
@@ -106,7 +108,10 @@ export default function Page() {
 						block.id === blockId
 							? {
 									...block,
-									props: { html: newHtml, json: htmlToJSON(newHtml) },
+									props: {
+										html: newHtml,
+										json: htmlToJSON(newHtml),
+									},
 								}
 							: block
 					),

@@ -80,6 +80,9 @@ export default function ElementToolbar({
 			name: 'Image',
 			icon: <Image size={24} className="text-muted-foreground" />,
 			category: 'Basic',
+			onClick: () => {
+				onAddElement?.(createBlock('Image', 'https://placehold.co/600x400'));
+			},
 		},
 		{
 			id: 'video',
