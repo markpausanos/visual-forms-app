@@ -15,9 +15,9 @@ import { Settings, Send, Share2, HomeIcon } from 'lucide-react';
 import MainToolbar from '@/components/flows/main-toolbar';
 import MainCanvas from '@/components/flows/main-canvas';
 import PageEditToolbar from '@/components/flows/page-edit-toolbar';
-import { Block, Page as FlowPage } from '@/components/blocks/componentMap';
-import { htmlToJSON } from '@/lib/tiptapHelpers';
-import { HtmlOnlyPage } from '@/lib/types/block';
+import { Page as FlowPage } from '@/components/blocks/componentMap';
+import { blockMapper } from '@/lib/utils/block-utils';
+import { AnyBlock } from '@/lib/types/block';
 
 export default function Page() {
 	const { flowId } = useParams<{ flowId: string }>();
@@ -33,6 +33,7 @@ export default function Page() {
 	);
 
 	console.log(pages);
+
 	const [selectedBlock, setSelectedBlock] = useState<{
 		id: string;
 		type: string;
@@ -49,20 +50,13 @@ export default function Page() {
 					throw new Error('Flow not found');
 				}
 
-				const pagesWithJson: FlowPage[] = (
-					flow.saved_json as HtmlOnlyPage[]
-				).map((page) => ({
-					id: page.id,
-					name: page.name,
-					blocks: page.blocks.map((block) => ({
-						id: block.id,
-						type: block.type,
-						props: {
-							html: block.props.html,
-							json: htmlToJSON(block.props.html),
-						},
-					})),
-				}));
+				const pagesWithJson: FlowPage[] = (flow.saved_json as FlowPage[]).map(
+					(page) => ({
+						id: page.id,
+						name: page.name,
+						blocks: page.blocks.map((block) => blockMapper(block)),
+					})
+				);
 
 				setTitle(flow.title || 'Untitled');
 				setPages(pagesWithJson);
@@ -98,23 +92,26 @@ export default function Page() {
 		}
 	};
 
-	const handleUpdateBlock = (blockId: string, newHtml: string) => {
+	const handleUpdateBlock = (
+		blockId: string,
+		updatedProps: Partial<AnyBlock['props']>
+	) => {
 		setPages((current) =>
 			current.map((page, idx) => {
 				if (idx !== activePageIndex) return page;
 				return {
 					...page,
-					blocks: page.blocks.map((block) =>
-						block.id === blockId
-							? {
-									...block,
-									props: {
-										html: newHtml,
-										json: htmlToJSON(newHtml),
-									},
-								}
-							: block
-					),
+					blocks: page.blocks.map((block) => {
+						if (block.id !== blockId) return block;
+
+						return {
+							...block,
+							props: {
+								...block.props,
+								...updatedProps,
+							},
+						} as AnyBlock;
+					}),
 				};
 			})
 		);
@@ -168,7 +165,7 @@ export default function Page() {
 			{/* body */}
 			<div className="flex flex-1 overflow-hidden">
 				<MainToolbar
-					onAddElement={(block: Block) => {
+					onAddElement={(block: AnyBlock) => {
 						setPages((pages) => {
 							const next = [...pages];
 							next[activePageIndex] = {

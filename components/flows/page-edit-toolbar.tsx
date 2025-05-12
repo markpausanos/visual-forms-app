@@ -5,6 +5,7 @@ import { Page } from '../blocks/componentMap';
 import { useEffect, useState } from 'react';
 import { Editor } from '@tiptap/react';
 import { blockToolbars } from './toolbar-components/block-toolbars';
+import { AnyBlock } from '@/lib/types/block';
 
 declare global {
 	interface Window {
@@ -20,7 +21,10 @@ interface Props {
 		id: string;
 		type: string;
 	} | null;
-	onUpdateBlock?: (id: string, html: string) => void;
+	onUpdateBlock?: (
+		id: string,
+		updatedProps: Partial<AnyBlock['props']>
+	) => void;
 }
 
 export default function PageEditToolbar({
@@ -66,8 +70,8 @@ export default function PageEditToolbar({
 									return Toolbar ? (
 										<Toolbar
 											block={currentBlock}
-											onChange={(id, html) =>
-												onUpdateBlock?.(id, html)
+											onChange={(id, updatedProps) =>
+												onUpdateBlock?.(id, updatedProps)
 											}
 										/>
 									) : (
@@ -75,7 +79,7 @@ export default function PageEditToolbar({
 											No editor for “{selectedBlock.type}” yet.
 										</p>
 									);
-								})()
+							  })()
 							: null}
 					</TabsContent>
 
@@ -117,7 +121,9 @@ type PageCardProps = {
 function PageCard({ title, isActive, onClick }: PageCardProps) {
 	return (
 		<div
-			className={`mb-3 p-3 rounded-lg cursor-pointer border ${isActive ? 'border-gray-300' : 'border-transparent'}`}
+			className={`mb-3 p-3 rounded-lg cursor-pointer border ${
+				isActive ? 'border-gray-300' : 'border-transparent'
+			}`}
 			onClick={onClick}
 		>
 			<div className="h-32 bg-gray-100 rounded-md mb-2 flex items-center justify-center">

@@ -21,8 +21,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { createBlock } from '@/lib/tiptapHelpers';
-import { Block } from '@/components/blocks/componentMap';
+import { createBlock } from '@/lib/addBlockHelpers';
+import { AnyBlock } from '@/lib/types/block';
 
 // Element category types
 type ElementCategory = 'Basic' | 'Questions' | 'Form (Fields)';
@@ -39,7 +39,7 @@ interface ElementType {
 interface ElementToolbarProps {
 	isOpen: boolean;
 	onClose: () => void;
-	onAddElement?: (type: Block) => void;
+	onAddElement?: (type: AnyBlock) => void;
 }
 
 export default function ElementToolbar({
@@ -178,7 +178,7 @@ export default function ElementToolbar({
 	const filteredElements = searchQuery
 		? elementTypes.filter((el) =>
 				el.name.toLowerCase().includes(searchQuery.toLowerCase())
-			)
+		  )
 		: elementTypes;
 
 	// Group elements by category

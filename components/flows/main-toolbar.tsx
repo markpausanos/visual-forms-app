@@ -3,14 +3,14 @@
 import { useState } from 'react';
 import { Grid3X3, PenTool, MessageSquare } from 'lucide-react';
 import ElementToolbar from './toolbar-items/element-toolbar';
-import { Block } from '../blocks/componentMap';
+import { AnyBlock } from '@/lib/types/block';
 
 type ActiveTool = 'elements' | 'sections' | 'design' | 'ai-chat' | null;
 
 export default function MainToolbar({
 	onAddElement,
 }: {
-	onAddElement?: (type: Block) => void;
+	onAddElement?: (type: AnyBlock) => void;
 }) {
 	const [activeTool, setActiveTool] = useState<ActiveTool>(null);
 	const [hoveredTool, setHoveredTool] = useState<ActiveTool>(null);

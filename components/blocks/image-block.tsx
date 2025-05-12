@@ -1,20 +1,33 @@
 'use client';
 
-import type { Block } from './componentMap';
+import { type ImageBlock } from '@/lib/types/block';
+import { cn } from '@/lib/utils';
 
-export default function ImageBlock({
-	block,
-	onChange,
-}: {
-	block: Block;
-	onChange: (updated: Block) => void;
-}) {
-	// Just render the HTML
-	return (
-		<div
-			className="py-2 px-0 focus-within:outline-dashed focus-within:outline-primary/50"
-			data-block-id={block.id}
-			dangerouslySetInnerHTML={{ __html: block.props.html || '' }}
+export default function ImageBlock({ block }: { block: ImageBlock }) {
+	const { src, alt, href, cornerRadius, shadow, aspectRatio } = block.props;
+
+	const imageElement = (
+		<img
+			src={src}
+			alt={alt || ''}
+			className={cn(
+				'w-full h-auto object-cover transition-all duration-200',
+				aspectRatio,
+				cornerRadius,
+				shadow
+			)}
 		/>
+	);
+
+	return (
+		<div className="image-block-container">
+			{href ? (
+				<a href={href} target="_blank" rel="noopener noreferrer">
+					{imageElement}
+				</a>
+			) : (
+				imageElement
+			)}
+		</div>
 	);
 }
