@@ -40,6 +40,7 @@ interface ElementToolbarProps {
 	isOpen: boolean;
 	onClose: () => void;
 	onAddElement?: (type: AnyBlock) => void;
+	onAddElementAfter?: (type: AnyBlock, afterBlockId: string) => void;
 	insertAfterBlockId?: string | null;
 }
 
@@ -47,7 +48,8 @@ export default function ElementToolbar({
 	isOpen,
 	onClose,
 	onAddElement,
-	insertAfterBlockId,
+	onAddElementAfter,
+	insertAfterBlockId = null,
 }: ElementToolbarProps) {
 	const [searchQuery, setSearchQuery] = useState('');
 	const [expandedCategories, setExpandedCategories] = useState<
@@ -83,7 +85,14 @@ export default function ElementToolbar({
 			icon: <Image size={24} className="text-muted-foreground" />,
 			category: 'Basic',
 			onClick: () => {
-				onAddElement?.(createBlock('Image', 'https://placehold.co/600x400'));
+				if (insertAfterBlockId) {
+					onAddElementAfter?.(
+						createBlock('Image', 'https://placehold.co/600x400'),
+						insertAfterBlockId
+					);
+				} else {
+					onAddElement?.(createBlock('Image', 'https://placehold.co/600x400'));
+				}
 			},
 		},
 		{
@@ -104,7 +113,14 @@ export default function ElementToolbar({
 			icon: <FileText size={24} className="text-muted-foreground" />,
 			category: 'Basic',
 			onClick: () => {
-				onAddElement?.(createBlock('Text', '<p>New text</>'));
+				if (insertAfterBlockId) {
+					onAddElementAfter?.(
+						createBlock('Text', '<p>New text</>'),
+						insertAfterBlockId
+					);
+				} else {
+					onAddElement?.(createBlock('Text', '<p>New text</>'));
+				}
 			},
 		},
 		{

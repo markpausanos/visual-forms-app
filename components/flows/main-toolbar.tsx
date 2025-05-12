@@ -118,6 +118,7 @@ export default function MainToolbar({
 					isOpen={showElementToolbar}
 					onClose={handleCloseElementToolbar}
 					onAddElement={handleElementAdd}
+					onAddElementAfter={onAddElementAfter}
 					insertAfterBlockId={insertAfterBlockId}
 				/>
 			</div>

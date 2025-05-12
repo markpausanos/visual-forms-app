@@ -52,9 +52,6 @@ export default function MainCanvas({
 }: MainCanvasProps) {
 	const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
 	const [activeBlock, setActiveBlock] = useState<AnyBlock | null>(null);
-	const [insertAfterBlockId, setInsertAfterBlockId] = useState<string | null>(
-		null
-	);
 
 	// Configure sensors for drag detection
 	const sensors = useSensors(
@@ -141,10 +138,6 @@ export default function MainCanvas({
 		}
 	};
 
-	const handleAddElementBelow = (blockId: string) => {
-		setInsertAfterBlockId(blockId);
-	};
-
 	return (
 		<div className="relative flex-1 bg-muted flex flex-col h-full">
 			{/* Main content area with scrolling */}
@@ -178,7 +171,7 @@ export default function MainCanvas({
 											isSelected={selectedBlockId === block.id}
 											onSelect={handleBlockSelect}
 											onChange={handleBlockChange}
-											onAddBelow={handleAddElementBelow}
+											onAddBelow={onAddElementBelow}
 											onDelete={onDelete}
 										/>
 									))}

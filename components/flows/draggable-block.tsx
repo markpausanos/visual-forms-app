@@ -15,6 +15,7 @@ interface DraggableBlockProps {
 	onChange: (updated: AnyBlock) => void;
 	onAddBelow?: (blockId: string) => void;
 	onDelete?: (blockId: string) => void;
+	insertAfterBlockId?: string | null;
 }
 
 export default function DraggableBlock({
