@@ -1,7 +1,7 @@
 'use client';
 
 import { Skeleton } from '@/components/ui/skeleton';
-import { Block, Page } from '../blocks/componentMap';
+import { Page } from '../blocks/componentMap';
 import PreviewModeToggle from './preview-mode-toggle';
 import { useState } from 'react';
 import {
@@ -21,6 +21,7 @@ import {
 } from '@dnd-kit/sortable';
 import DraggableBlock from './draggable-block';
 import { reorderBlocks } from '@/lib/dnd-utils';
+import { AnyBlock } from '@/lib/types/block';
 
 interface MainCanvasProps {
 	page: Page | null;
@@ -31,6 +32,8 @@ interface MainCanvasProps {
 	previewMode: 'desktop' | 'mobile';
 	onPreviewModeChange: (mode: 'desktop' | 'mobile') => void;
 	onSelectBlock?: (block: { id: string; type: string } | null) => void;
+	onAddElementBelow?: (blockId: string) => void;
+	onDelete?: (blockId: string) => void;
 }
 
 export default function MainCanvas({
@@ -44,9 +47,14 @@ export default function MainCanvas({
 	previewMode,
 	onPreviewModeChange,
 	onSelectBlock,
+	onAddElementBelow,
+	onDelete,
 }: MainCanvasProps) {
 	const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
-	const [activeBlock, setActiveBlock] = useState<Block | null>(null);
+	const [activeBlock, setActiveBlock] = useState<AnyBlock | null>(null);
+	const [insertAfterBlockId, setInsertAfterBlockId] = useState<string | null>(
+		null
+	);
 
 	// Configure sensors for drag detection
 	const sensors = useSensors(
@@ -77,7 +85,7 @@ export default function MainCanvas({
 		);
 	}
 
-	const handleBlockChange = (updated: Block) => {
+	const handleBlockChange = (updated: AnyBlock) => {
 		const newPages = [...pages];
 		newPages[activePageIndex] = {
 			...newPages[activePageIndex]!,
@@ -88,7 +96,7 @@ export default function MainCanvas({
 		setPages(newPages);
 	};
 
-	const handleBlockSelect = (block: Block | null) => {
+	const handleBlockSelect = (block: AnyBlock | null) => {
 		setSelectedBlockId(block?.id || null);
 		if (onSelectBlock) {
 			onSelectBlock(block ? { id: block.id, type: block.type } : null);
@@ -133,6 +141,10 @@ export default function MainCanvas({
 		}
 	};
 
+	const handleAddElementBelow = (blockId: string) => {
+		setInsertAfterBlockId(blockId);
+	};
+
 	return (
 		<div className="relative flex-1 bg-muted flex flex-col h-full">
 			{/* Main content area with scrolling */}
@@ -166,6 +178,8 @@ export default function MainCanvas({
 											isSelected={selectedBlockId === block.id}
 											onSelect={handleBlockSelect}
 											onChange={handleBlockChange}
+											onAddBelow={handleAddElementBelow}
+											onDelete={onDelete}
 										/>
 									))}
 								</SortableContext>

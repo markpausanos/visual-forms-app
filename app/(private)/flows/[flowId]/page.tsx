@@ -39,6 +39,10 @@ export default function Page() {
 		type: string;
 	} | null>(null);
 
+	const [insertAfterBlockId, setInsertAfterBlockId] = useState<string | null>(
+		null
+	);
+
 	useEffect(() => {
 		(async () => {
 			setIsFetching(true);
@@ -117,6 +121,50 @@ export default function Page() {
 		);
 	};
 
+	const handleAddElementWithPosition = (
+		block: AnyBlock,
+		afterBlockId: string | null
+	) => {
+		setPages((pages) => {
+			const next = [...pages];
+			const activePage = next[activePageIndex];
+
+			if (!afterBlockId) {
+				next[activePageIndex] = {
+					...activePage,
+					blocks: [...activePage.blocks, block],
+				};
+				return next;
+			}
+
+			const insertIndex = activePage.blocks.findIndex(
+				(b) => b.id === afterBlockId
+			);
+
+			if (insertIndex === -1) {
+				next[activePageIndex] = {
+					...activePage,
+					blocks: [...activePage.blocks, block],
+				};
+			} else {
+				const newBlocks = [...activePage.blocks];
+				newBlocks.splice(insertIndex + 1, 0, block);
+
+				next[activePageIndex] = {
+					...activePage,
+					blocks: newBlocks,
+				};
+			}
+
+			return next;
+		});
+	};
+
+	const handleAddElementAfter = (block: AnyBlock, afterBlockId: string) => {
+		handleAddElementWithPosition(block, afterBlockId);
+		setInsertAfterBlockId(null);
+	};
+
 	const activePage = pages?.[activePageIndex] ?? null;
 
 	return (
@@ -166,15 +214,10 @@ export default function Page() {
 			<div className="flex flex-1 overflow-hidden">
 				<MainToolbar
 					onAddElement={(block: AnyBlock) => {
-						setPages((pages) => {
-							const next = [...pages];
-							next[activePageIndex] = {
-								...next[activePageIndex],
-								blocks: [...next[activePageIndex].blocks, block],
-							};
-							return next;
-						});
+						handleAddElementWithPosition(block, null);
 					}}
+					onAddElementAfter={handleAddElementAfter}
+					insertAfterBlockId={insertAfterBlockId}
 				/>
 
 				<MainCanvas
@@ -186,6 +229,23 @@ export default function Page() {
 					previewMode={previewMode}
 					onPreviewModeChange={setPreviewMode}
 					onSelectBlock={setSelectedBlock}
+					onAddElementBelow={(blockId) => {
+						setInsertAfterBlockId(blockId);
+					}}
+					onDelete={(blockId) => {
+						setPages((current) =>
+							current.map((page, idx) => {
+								if (idx !== activePageIndex) return page;
+								return {
+									...page,
+									blocks: page.blocks.filter((block) => block.id !== blockId),
+								};
+							})
+						);
+						if (selectedBlock?.id === blockId) {
+							setSelectedBlock(null);
+						}
+					}}
 				/>
 
 				<PageEditToolbar

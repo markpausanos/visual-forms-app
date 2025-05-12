@@ -40,12 +40,14 @@ interface ElementToolbarProps {
 	isOpen: boolean;
 	onClose: () => void;
 	onAddElement?: (type: AnyBlock) => void;
+	insertAfterBlockId?: string | null;
 }
 
 export default function ElementToolbar({
 	isOpen,
 	onClose,
 	onAddElement,
+	insertAfterBlockId,
 }: ElementToolbarProps) {
 	const [searchQuery, setSearchQuery] = useState('');
 	const [expandedCategories, setExpandedCategories] = useState<
@@ -258,6 +260,7 @@ export default function ElementToolbar({
 													onClick={() => {
 														if (element.onClick) {
 															element.onClick();
+															onClose();
 														}
 													}}
 												>

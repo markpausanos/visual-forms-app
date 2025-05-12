@@ -1,17 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Grid3X3, PenTool, MessageSquare } from 'lucide-react';
 import ElementToolbar from './toolbar-items/element-toolbar';
 import { AnyBlock } from '@/lib/types/block';
 
 type ActiveTool = 'elements' | 'sections' | 'design' | 'ai-chat' | null;
 
+interface MainToolbarProps {
+	onAddElement?: (type: AnyBlock) => void;
+	onAddElementAfter?: (type: AnyBlock, afterBlockId: string) => void;
+	insertAfterBlockId?: string | null;
+}
+
 export default function MainToolbar({
 	onAddElement,
-}: {
-	onAddElement?: (type: AnyBlock) => void;
-}) {
+	onAddElementAfter,
+	insertAfterBlockId = null,
+}: MainToolbarProps) {
 	const [activeTool, setActiveTool] = useState<ActiveTool>(null);
 	const [hoveredTool, setHoveredTool] = useState<ActiveTool>(null);
 
@@ -40,14 +46,32 @@ export default function MainToolbar({
 		}
 	};
 
+	// Force show element toolbar when inserting after a block
+	useEffect(() => {
+		if (insertAfterBlockId) {
+			setActiveTool('elements');
+		}
+	}, [insertAfterBlockId]);
+
 	// Determine if toolbar should be shown
 	const showElementToolbar =
-		activeTool === 'elements' || hoveredTool === 'elements';
+		activeTool === 'elements' ||
+		hoveredTool === 'elements' ||
+		insertAfterBlockId !== null;
 
 	// Handle close of Element Toolbar
 	const handleCloseElementToolbar = () => {
 		setActiveTool(null);
 		setHoveredTool(null);
+	};
+
+	// Handle element add with context
+	const handleElementAdd = (block: AnyBlock) => {
+		if (insertAfterBlockId) {
+			onAddElementAfter?.(block, insertAfterBlockId);
+		} else {
+			onAddElement?.(block);
+		}
 	};
 
 	return (
@@ -93,7 +117,8 @@ export default function MainToolbar({
 				<ElementToolbar
 					isOpen={showElementToolbar}
 					onClose={handleCloseElementToolbar}
-					onAddElement={onAddElement}
+					onAddElement={handleElementAdd}
+					insertAfterBlockId={insertAfterBlockId}
 				/>
 			</div>
 		</div>

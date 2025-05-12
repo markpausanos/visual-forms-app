@@ -2,15 +2,19 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Block, componentMap } from '../blocks/componentMap';
-import { GripVertical } from 'lucide-react';
+import { componentMap } from '../blocks/componentMap';
+import { GripVertical, Plus, Pencil, Copy, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { AnyBlock } from '@/lib/types/block';
+import { Button } from '@/components/ui/button';
 
 interface DraggableBlockProps {
-	block: Block;
+	block: AnyBlock;
 	isSelected: boolean;
-	onSelect: (block: Block) => void;
-	onChange: (updated: Block) => void;
+	onSelect: (block: AnyBlock) => void;
+	onChange: (updated: AnyBlock) => void;
+	onAddBelow?: (blockId: string) => void;
+	onDelete?: (blockId: string) => void;
 }
 
 export default function DraggableBlock({
@@ -18,6 +22,8 @@ export default function DraggableBlock({
 	isSelected,
 	onSelect,
 	onChange,
+	onAddBelow,
+	onDelete,
 }: DraggableBlockProps) {
 	const {
 		attributes,
@@ -65,15 +71,73 @@ export default function DraggableBlock({
 				onSelect(block);
 			}}
 		>
-			{/* Drag handle */}
-			<div
-				{...attributes}
-				{...listeners}
-				className="drag-handle absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 h-8 flex items-center px-2 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing"
-				title="Drag to reorder"
-			>
-				<GripVertical size={18} className="text-gray-400 hover:text-gray-600" />
-			</div>
+			{/* Block actions toolbar - visible when selected */}
+			{isSelected && (
+				<div className="absolute right-0 top-1/2 transform translate-x-full -translate-y-1/2 bg-white rounded-md shadow-md flex flex-col border border-gray-200">
+					<Button
+						variant="ghost"
+						size="icon"
+						className="p-2 hover:bg-gray-100"
+						onClick={(e) => {
+							e.stopPropagation();
+							onAddBelow?.(block.id);
+						}}
+						title="Add element below"
+					>
+						<Plus size={16} />
+					</Button>
+
+					<Button
+						variant="ghost"
+						size="icon"
+						className="p-2 hover:bg-gray-100"
+						onClick={(e) => {
+							e.stopPropagation();
+							// Edit functionality (placeholder)
+						}}
+						title="Edit block"
+					>
+						<Pencil size={16} />
+					</Button>
+
+					<Button
+						variant="ghost"
+						size="icon"
+						className="p-2 hover:bg-gray-100"
+						{...attributes}
+						{...listeners}
+						title="Drag to reorder"
+					>
+						<GripVertical size={16} />
+					</Button>
+
+					<Button
+						variant="ghost"
+						size="icon"
+						className="p-2 hover:bg-gray-100"
+						onClick={(e) => {
+							e.stopPropagation();
+							// Copy functionality (placeholder)
+						}}
+						title="Duplicate block"
+					>
+						<Copy size={16} />
+					</Button>
+
+					<Button
+						variant="ghost"
+						size="icon"
+						className="p-2 hover:bg-gray-100 text-red-500 hover:text-red-700"
+						onClick={(e) => {
+							e.stopPropagation();
+							onDelete?.(block.id);
+						}}
+						title="Delete block"
+					>
+						<Trash2 size={16} />
+					</Button>
+				</div>
+			)}
 
 			{/* Block content */}
 			<div

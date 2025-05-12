@@ -17,6 +17,8 @@ export type ImageBlockProps = {
 	aspectRatio?: 'aspect-auto' | 'aspect-square' | 'aspect-video';
 	cornerRadius?: 'rounded-none' | 'rounded-md' | 'rounded-full';
 	shadow?: 'shadow-none' | 'shadow-sm' | 'shadow-md' | 'shadow-lg';
+	fullWidth?: boolean;
+	fullHeight?: boolean;
 };
 
 // Create specific block types

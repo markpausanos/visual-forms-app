@@ -4,7 +4,16 @@ import { type ImageBlock } from '@/lib/types/block';
 import { cn } from '@/lib/utils';
 
 export default function ImageBlock({ block }: { block: ImageBlock }) {
-	const { src, alt, href, cornerRadius, shadow, aspectRatio } = block.props;
+	const {
+		src,
+		alt,
+		href,
+		cornerRadius,
+		shadow,
+		aspectRatio,
+		fullWidth,
+		fullHeight,
+	} = block.props;
 
 	const imageElement = (
 		<img
@@ -14,7 +23,9 @@ export default function ImageBlock({ block }: { block: ImageBlock }) {
 				'w-full h-auto object-cover transition-all duration-200',
 				aspectRatio,
 				cornerRadius,
-				shadow
+				shadow,
+				fullWidth ? 'w-full' : 'w-auto',
+				fullHeight ? 'h-full' : 'h-auto'
 			)}
 		/>
 	);

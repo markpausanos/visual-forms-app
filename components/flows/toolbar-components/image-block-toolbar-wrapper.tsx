@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { ImageBlock, ImageBlockProps } from '@/lib/types/block';
 import {
 	Upload,
@@ -12,7 +13,6 @@ import {
 	Circle,
 	Sun,
 	SquareRoundCorner,
-
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -36,6 +36,8 @@ export function ImageBlockToolbarWrapper({
 	const [shadow, setShadow] = useState<ImageBlockProps['shadow']>(
 		block.props.shadow || 'shadow-none'
 	);
+	const [fullWidth, setFullWidth] = useState(block.props.fullWidth || false);
+	const [fullHeight, setFullHeight] = useState(block.props.fullHeight || false);
 
 	// Handle file upload
 	const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -235,6 +237,38 @@ export function ImageBlockToolbarWrapper({
 					>
 						<Sun size={16} />
 					</Button>
+				</div>
+			</div>
+
+			<div className="space-y-4">
+				<Label>Size Options</Label>
+
+				<div className="flex items-center justify-between">
+					<Label htmlFor="full-width" className="cursor-pointer">
+						Full Width
+					</Label>
+					<Switch
+						id="full-width"
+						checked={fullWidth}
+						onCheckedChange={(checked) => {
+							setFullWidth(checked);
+							onChange(block.id, { fullWidth: checked });
+						}}
+					/>
+				</div>
+
+				<div className="flex items-center justify-between">
+					<Label htmlFor="full-height" className="cursor-pointer">
+						Full Height
+					</Label>
+					<Switch
+						id="full-height"
+						checked={fullHeight}
+						onCheckedChange={(checked) => {
+							setFullHeight(checked);
+							onChange(block.id, { fullHeight: checked });
+						}}
+					/>
 				</div>
 			</div>
 		</div>
