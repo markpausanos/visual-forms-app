@@ -1,17 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Grid3X3, PenTool, MessageSquare } from 'lucide-react';
 import ElementToolbar from './toolbar-items/element-toolbar';
-import { Block } from '../blocks/componentMap';
+import { AnyBlock } from '@/lib/types/block';
 
 type ActiveTool = 'elements' | 'sections' | 'design' | 'ai-chat' | null;
 
+interface MainToolbarProps {
+	onAddElement?: (type: AnyBlock) => void;
+	onAddElementAfter?: (type: AnyBlock, afterBlockId: string) => void;
+	insertAfterBlockId?: string | null;
+}
+
 export default function MainToolbar({
 	onAddElement,
-}: {
-	onAddElement?: (type: Block) => void;
-}) {
+	onAddElementAfter,
+	insertAfterBlockId = null,
+}: MainToolbarProps) {
 	const [activeTool, setActiveTool] = useState<ActiveTool>(null);
 	const [hoveredTool, setHoveredTool] = useState<ActiveTool>(null);
 
@@ -40,9 +46,18 @@ export default function MainToolbar({
 		}
 	};
 
+	// Force show element toolbar when inserting after a block
+	useEffect(() => {
+		if (insertAfterBlockId) {
+			setActiveTool('elements');
+		}
+	}, [insertAfterBlockId]);
+
 	// Determine if toolbar should be shown
 	const showElementToolbar =
-		activeTool === 'elements' || hoveredTool === 'elements';
+		activeTool === 'elements' ||
+		hoveredTool === 'elements' ||
+		insertAfterBlockId !== null;
 
 	// Handle close of Element Toolbar
 	const handleCloseElementToolbar = () => {
@@ -50,9 +65,18 @@ export default function MainToolbar({
 		setHoveredTool(null);
 	};
 
+	// Handle element add with context
+	const handleElementAdd = (block: AnyBlock) => {
+		if (insertAfterBlockId) {
+			onAddElementAfter?.(block, insertAfterBlockId);
+		} else {
+			onAddElement?.(block);
+		}
+	};
+
 	return (
 		<div className="flex h-full relative">
-			<div className="w-24 max-w-24 border-r flex flex-col items-center py-6 px-2 bg-white">
+			<div className="w-24 max-w-24 border-r flex flex-col items-center py-6 px bg-white">
 				<SidebarItem
 					icon={<Grid3X3 size={20} />}
 					label="Elements"
@@ -86,11 +110,18 @@ export default function MainToolbar({
 					onMouseLeave={handleMouseLeave}
 				/>
 			</div>
-			<ElementToolbar
-				isOpen={showElementToolbar}
-				onClose={handleCloseElementToolbar}
-				onAddElement={onAddElement}
-			/>
+			<div
+				onMouseEnter={() => handleMouseEnter('elements')}
+				onMouseLeave={handleMouseLeave}
+			>
+				<ElementToolbar
+					isOpen={showElementToolbar}
+					onClose={handleCloseElementToolbar}
+					onAddElement={handleElementAdd}
+					onAddElementAfter={onAddElementAfter}
+					insertAfterBlockId={insertAfterBlockId}
+				/>
+			</div>
 		</div>
 	);
 }
@@ -117,7 +148,7 @@ function SidebarItem({
 			className={`flex flex-col items-center gap-1 py-3 w-full cursor-pointer
        		 ${active ? 'text-primary' : 'text-muted-foreground'} 
        		 hover:text-primary transition-colors duration-200
-			 hover:bg-muted rounded-md px-2
+			 hover:bg-muted
 			 `}
 			onMouseDown={onClick}
 			onMouseEnter={onMouseEnter}

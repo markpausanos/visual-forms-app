@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Block } from '@/components/blocks/componentMap';
+import { v4 as uuid } from 'uuid';
+import { AnyBlock, TextBlock, ImageBlock } from '@/lib/types/block';
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
-import { v4 as uuid } from 'uuid';
 
 export function htmlToJSON(html: string) {
 	const editor = new Editor({
@@ -24,7 +24,7 @@ export function jsonToHTML(json: any) {
 	return html;
 }
 
-export function createBlock(type: 'Text' | 'Image', payload: string): Block {
+export function createBlock(type: AnyBlock['type'], payload: string): AnyBlock {
 	switch (type) {
 		case 'Text':
 			return {
@@ -32,10 +32,22 @@ export function createBlock(type: 'Text' | 'Image', payload: string): Block {
 				type: 'Text',
 				props: {
 					html: payload,
-					json: htmlToJSON(payload),
+					textAlign: 'text-center',
+					size: 'text-base',
 				},
-			};
-
+			} as TextBlock;
+		case 'Image':
+			return {
+				id: uuid(),
+				type: 'Image',
+				props: {
+					src: payload,
+					alt: 'Image',
+					aspectRatio: 'aspect-auto',
+					cornerRadius: 'rounded-md',
+					shadow: 'shadow-sm',
+				},
+			} as ImageBlock;
 		default:
 			throw new Error(`Unknown block type: ${type}`);
 	}

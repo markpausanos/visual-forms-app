@@ -7,18 +7,21 @@ import Italic from '@tiptap/extension-italic';
 import TextStyle from '@tiptap/extension-text-style';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
-import type { Block } from './componentMap';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { type TextBlock, TextBlockProps } from '@/lib/types/block';
+import { cn } from '@/lib/utils';
 
 export default function TextBlock({
 	block,
 	onChange,
 }: {
-	block: Block;
-	onChange: (updated: Block) => void;
+	block: TextBlock;
+	onChange: (updated: TextBlock) => void;
 }) {
+	const [content, setContent] = useState(block.props.html);
+
 	const editor = useEditor({
-		content: block.props.json,
+		content: content,
 		editable: true,
 		extensions: [
 			StarterKit.configure({ heading: false }),
@@ -29,13 +32,23 @@ export default function TextBlock({
 			TextAlign.configure({ types: ['paragraph'] }),
 		],
 		onUpdate: ({ editor }) => {
-			const json = editor.getJSON();
+			setContent(editor.getHTML());
+		},
+		onBlur: ({ editor }) => {
 			const html = editor.getHTML();
+
+			// Get alignment from editor
+			const align = editor.getAttributes('textAlign').textAlign;
+			const textAlign = align
+				? (`text-${align}` as TextBlockProps['textAlign'])
+				: block.props.textAlign;
+
 			onChange({
 				...block,
 				props: {
+					...block.props,
 					html,
-					json,
+					textAlign,
 				},
 			});
 		},
@@ -46,6 +59,14 @@ export default function TextBlock({
 			},
 		},
 	});
+
+	// Set initial alignment when editor is ready
+	useEffect(() => {
+		if (editor && block.props.textAlign) {
+			const align = block.props.textAlign.replace('text-', '');
+			editor.commands.setTextAlign(align);
+		}
+	}, [editor, block.props.textAlign]);
 
 	useEffect(() => {
 		if (!editor || typeof window === 'undefined') return;
@@ -60,7 +81,10 @@ export default function TextBlock({
 	if (!editor) return null;
 
 	return (
-		<div className="space-y-2" data-block-id={block.id}>
+		<div
+			className={cn('space-y-2', block.props.textAlign, block.props.size)}
+			data-block-id={block.id}
+		>
 			{/* The editor */}
 			<EditorContent editor={editor} />
 		</div>

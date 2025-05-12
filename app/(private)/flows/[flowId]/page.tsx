@@ -15,9 +15,9 @@ import { Settings, Send, Share2, HomeIcon } from 'lucide-react';
 import MainToolbar from '@/components/flows/main-toolbar';
 import MainCanvas from '@/components/flows/main-canvas';
 import PageEditToolbar from '@/components/flows/page-edit-toolbar';
-import { Block, Page as FlowPage } from '@/components/blocks/componentMap';
-import { htmlToJSON } from '@/lib/tiptapHelpers';
-import { HtmlOnlyPage } from '@/lib/types/block';
+import { Page as FlowPage } from '@/components/blocks/componentMap';
+import { blockMapper } from '@/lib/utils/block-utils';
+import { AnyBlock } from '@/lib/types/block';
 
 export default function Page() {
 	const { flowId } = useParams<{ flowId: string }>();
@@ -31,10 +31,17 @@ export default function Page() {
 	const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>(
 		'desktop'
 	);
+
+	console.log(pages);
+
 	const [selectedBlock, setSelectedBlock] = useState<{
 		id: string;
 		type: string;
 	} | null>(null);
+
+	const [insertAfterBlockId, setInsertAfterBlockId] = useState<string | null>(
+		null
+	);
 
 	useEffect(() => {
 		(async () => {
@@ -47,20 +54,13 @@ export default function Page() {
 					throw new Error('Flow not found');
 				}
 
-				const pagesWithJson: FlowPage[] = (
-					flow.saved_json as HtmlOnlyPage[]
-				).map((page) => ({
-					id: page.id,
-					name: page.name,
-					blocks: page.blocks.map((block) => ({
-						id: block.id,
-						type: block.type,
-						props: {
-							html: block.props.html,
-							json: htmlToJSON(block.props.html),
-						},
-					})),
-				}));
+				const pagesWithJson: FlowPage[] = (flow.saved_json as FlowPage[]).map(
+					(page) => ({
+						id: page.id,
+						name: page.name,
+						blocks: page.blocks.map((block) => blockMapper(block)),
+					})
+				);
 
 				setTitle(flow.title || 'Untitled');
 				setPages(pagesWithJson);
@@ -98,22 +98,71 @@ export default function Page() {
 
 	const handleUpdateBlock = (
 		blockId: string,
-		newProps: Record<string, unknown>
+		updatedProps: Partial<AnyBlock['props']>
 	) => {
-		if (!pages) return;
 		setPages((current) =>
 			current.map((page, idx) => {
 				if (idx !== activePageIndex) return page;
 				return {
 					...page,
-					blocks: page.blocks.map((block) =>
-						block.id === blockId
-							? { ...block, props: { ...block.props, ...newProps } }
-							: block
-					),
+					blocks: page.blocks.map((block) => {
+						if (block.id !== blockId) return block;
+
+						return {
+							...block,
+							props: {
+								...block.props,
+								...updatedProps,
+							},
+						} as AnyBlock;
+					}),
 				};
 			})
 		);
+	};
+
+	const handleAddElementWithPosition = (
+		block: AnyBlock,
+		afterBlockId: string | null
+	) => {
+		setPages((pages) => {
+			const next = [...pages];
+			const activePage = next[activePageIndex];
+
+			if (!afterBlockId) {
+				next[activePageIndex] = {
+					...activePage,
+					blocks: [...activePage.blocks, block],
+				};
+				return next;
+			}
+
+			const insertIndex = activePage.blocks.findIndex(
+				(b) => b.id === afterBlockId
+			);
+
+			if (insertIndex === -1) {
+				next[activePageIndex] = {
+					...activePage,
+					blocks: [...activePage.blocks, block],
+				};
+			} else {
+				const newBlocks = [...activePage.blocks];
+				newBlocks.splice(insertIndex + 1, 0, block);
+
+				next[activePageIndex] = {
+					...activePage,
+					blocks: newBlocks,
+				};
+			}
+
+			return next;
+		});
+	};
+
+	const handleAddElementAfter = (block: AnyBlock, afterBlockId: string) => {
+		handleAddElementWithPosition(block, afterBlockId);
+		setInsertAfterBlockId(null);
 	};
 
 	const activePage = pages?.[activePageIndex] ?? null;
@@ -164,16 +213,11 @@ export default function Page() {
 			{/* body */}
 			<div className="flex flex-1 overflow-hidden">
 				<MainToolbar
-					onAddElement={(block: Block) => {
-						setPages((pages) => {
-							const next = [...pages];
-							next[activePageIndex] = {
-								...next[activePageIndex],
-								blocks: [...next[activePageIndex].blocks, block],
-							};
-							return next;
-						});
+					onAddElement={(block: AnyBlock) => {
+						handleAddElementWithPosition(block, null);
 					}}
+					onAddElementAfter={handleAddElementAfter}
+					insertAfterBlockId={insertAfterBlockId}
 				/>
 
 				<MainCanvas
@@ -185,6 +229,23 @@ export default function Page() {
 					previewMode={previewMode}
 					onPreviewModeChange={setPreviewMode}
 					onSelectBlock={setSelectedBlock}
+					onAddElementBelow={(blockId) => {
+						setInsertAfterBlockId(blockId);
+					}}
+					onDelete={(blockId) => {
+						setPages((current) =>
+							current.map((page, idx) => {
+								if (idx !== activePageIndex) return page;
+								return {
+									...page,
+									blocks: page.blocks.filter((block) => block.id !== blockId),
+								};
+							})
+						);
+						if (selectedBlock?.id === blockId) {
+							setSelectedBlock(null);
+						}
+					}}
 				/>
 
 				<PageEditToolbar

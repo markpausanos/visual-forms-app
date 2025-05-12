@@ -21,8 +21,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { createBlock } from '@/lib/tiptapHelpers';
-import { Block } from '@/components/blocks/componentMap';
+import { createBlock } from '@/lib/addBlockHelpers';
+import { AnyBlock } from '@/lib/types/block';
 
 // Element category types
 type ElementCategory = 'Basic' | 'Questions' | 'Form (Fields)';
@@ -39,13 +39,17 @@ interface ElementType {
 interface ElementToolbarProps {
 	isOpen: boolean;
 	onClose: () => void;
-	onAddElement?: (type: Block) => void;
+	onAddElement?: (type: AnyBlock) => void;
+	onAddElementAfter?: (type: AnyBlock, afterBlockId: string) => void;
+	insertAfterBlockId?: string | null;
 }
 
 export default function ElementToolbar({
 	isOpen,
 	onClose,
 	onAddElement,
+	onAddElementAfter,
+	insertAfterBlockId = null,
 }: ElementToolbarProps) {
 	const [searchQuery, setSearchQuery] = useState('');
 	const [expandedCategories, setExpandedCategories] = useState<
@@ -80,6 +84,16 @@ export default function ElementToolbar({
 			name: 'Image',
 			icon: <Image size={24} className="text-muted-foreground" />,
 			category: 'Basic',
+			onClick: () => {
+				if (insertAfterBlockId) {
+					onAddElementAfter?.(
+						createBlock('Image', 'https://placehold.co/600x400'),
+						insertAfterBlockId
+					);
+				} else {
+					onAddElement?.(createBlock('Image', 'https://placehold.co/600x400'));
+				}
+			},
 		},
 		{
 			id: 'video',
@@ -99,7 +113,14 @@ export default function ElementToolbar({
 			icon: <FileText size={24} className="text-muted-foreground" />,
 			category: 'Basic',
 			onClick: () => {
-				onAddElement?.(createBlock('Text', '<p>New text</>'));
+				if (insertAfterBlockId) {
+					onAddElementAfter?.(
+						createBlock('Text', '<p>New text</>'),
+						insertAfterBlockId
+					);
+				} else {
+					onAddElement?.(createBlock('Text', '<p>New text</>'));
+				}
 			},
 		},
 		{
@@ -175,7 +196,7 @@ export default function ElementToolbar({
 	const filteredElements = searchQuery
 		? elementTypes.filter((el) =>
 				el.name.toLowerCase().includes(searchQuery.toLowerCase())
-			)
+		  )
 		: elementTypes;
 
 	// Group elements by category
@@ -255,6 +276,7 @@ export default function ElementToolbar({
 													onClick={() => {
 														if (element.onClick) {
 															element.onClick();
+															onClose();
 														}
 													}}
 												>

@@ -1,24 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import TextBlock from './text-block';
-
-export type BlockType = 'Text';
-
-export interface Block {
-	id: string;
-	type: BlockType;
-	props: {
-		html: string; 
-		json: any;
-	};
-}
+import ImageBlock from './image-block';
+import { AnyBlock } from '@/lib/types/block';
 
 export interface Page {
 	id: string;
 	name: string;
-	blocks: Block[];
+	blocks: AnyBlock[];
 }
 
-export const componentMap: Record<BlockType, React.ComponentType<any>> = {
+export const componentMap: Record<
+	AnyBlock['type'],
+	React.ComponentType<any>
+> = {
 	Text: TextBlock,
+	Image: ImageBlock,
 };
