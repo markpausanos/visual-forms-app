@@ -141,7 +141,7 @@ export default function MainCanvas({
 	return (
 		<div className="relative flex-1 bg-muted flex flex-col h-full">
 			{/* Main content area with scrolling */}
-			<div className="flex-1 overflow-auto p-8 pb-20">
+			<div className="flex-1 overflow-auto p-8 pt-10 pb-20">
 				<div className="flex justify-center min-h-full">
 					<div
 						className={`w-full flex flex-col bg-white rounded-md shadow-sm p-5 transition-all duration-500 mb-4 ${

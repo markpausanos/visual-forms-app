@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { ImageBlock, ImageBlockProps } from '@/lib/types/block';
+import { uploadImageToStorage } from '@/actions/storage';
+import { toast } from 'sonner';
 import {
 	Upload,
 	Square,
@@ -13,6 +15,7 @@ import {
 	Circle,
 	Sun,
 	SquareRoundCorner,
+	Loader2,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -38,22 +41,42 @@ export function ImageBlockToolbarWrapper({
 	);
 	const [fullWidth, setFullWidth] = useState(block.props.fullWidth || false);
 	const [fullHeight, setFullHeight] = useState(block.props.fullHeight || false);
+	const [isUploading, setIsUploading] = useState(false);
 
 	// Handle file upload
-	const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+	const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
 		if (!file) return;
 
-		// Reset the file input
-		e.target.value = '';
+		// Check file size before attempting upload
+		if (file.size > 8 * 1024 * 1024) {
+			// 8MB max
+			toast.error('File too large (max 8MB)');
+			return;
+		}
 
-		const reader = new FileReader();
-		reader.onload = () => {
-			const result = reader.result as string;
-			setSrc(result);
-			onChange(block.id, { src: result });
-		};
-		reader.readAsDataURL(file);
+		e.target.value = '';
+		setIsUploading(true);
+
+		try {
+			// Show local preview immediately
+			const reader = new FileReader();
+			reader.onload = () => setSrc(reader.result as string);
+			reader.readAsDataURL(file);
+
+			// For large files, consider direct upload to Supabase
+			// using a presigned URL instead of sending through server action
+			const uploadedUrl = await uploadImageToStorage(file, block.id);
+
+			setSrc(uploadedUrl);
+			onChange(block.id, { src: uploadedUrl });
+			toast.success('Image uploaded successfully');
+		} catch (error) {
+			console.error('Error uploading image:', error);
+			toast.error('Failed to upload image');
+		} finally {
+			setIsUploading(false);
+		}
 	};
 
 	return (
@@ -69,21 +92,36 @@ export function ImageBlockToolbarWrapper({
 							onChange(block.id, { src: e.target.value });
 						}}
 						placeholder="https://example.com/image.jpg"
+						disabled={isUploading}
 					/>
 					<Label
 						htmlFor="file-upload"
-						className="cursor-pointer px-2 py-1 bg-muted rounded-md flex items-center"
+						className={`cursor-pointer px-2 py-1 bg-muted rounded-md flex items-center justify-center w-10 h-9 ${
+							isUploading
+								? 'opacity-50 cursor-not-allowed'
+								: 'hover:bg-muted/80'
+						}`}
 					>
-						<Upload size={16} />
+						{isUploading ? (
+							<Loader2 size={16} className="animate-spin" />
+						) : (
+							<Upload size={16} />
+						)}
 						<input
 							id="file-upload"
 							type="file"
 							accept="image/*"
 							className="hidden"
 							onChange={handleFileUpload}
+							disabled={isUploading}
 						/>
 					</Label>
 				</div>
+				{isUploading && (
+					<p className="text-xs text-muted-foreground mt-1">
+						Uploading image...
+					</p>
+				)}
 			</div>
 
 			<div className="space-y-2">
