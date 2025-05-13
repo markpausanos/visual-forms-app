@@ -74,7 +74,7 @@ export default function DraggableBlock({
 		>
 			{/* Block actions toolbar - visible when selected */}
 			{isSelected && (
-				<div className="absolute right-0 top-1/2 transform translate-x-full -translate-y-1/2 bg-white rounded-md shadow-md flex flex-col border border-gray-200">
+				<div className="absolute right-0 top-1/2 transform translate-x-full -translate-y-1/2 bg-white rounded-md shadow-md flex flex-col border border-gray-200 z-999">
 					<Button
 						variant="ghost"
 						size="icon"
