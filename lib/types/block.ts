@@ -14,11 +14,16 @@ export type ImageBlockProps = {
 	src: string;
 	alt?: string;
 	href?: string;
-	aspectRatio?: 'aspect-auto' | 'aspect-square' | 'aspect-video';
-	cornerRadius?: 'rounded-none' | 'rounded-md' | 'rounded-full';
-	shadow?: 'shadow-none' | 'shadow-sm' | 'shadow-md' | 'shadow-lg';
+	aspectRatio?:
+		| 'aspect-auto'
+		| 'aspect-square'
+		| 'aspect-video'
+		| 'aspect-ratio: 9/16';
+	cornerRadius?: number;
+	shadow?: number;
 	fullWidth?: boolean;
 	fullHeight?: boolean;
+	fullSize?: boolean;
 };
 
 // Create specific block types

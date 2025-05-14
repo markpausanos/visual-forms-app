@@ -25,6 +25,7 @@ interface Props {
 		id: string,
 		updatedProps: Partial<AnyBlock['props']>
 	) => void;
+	openImageSelector?: (blockId: string) => void;
 }
 
 export default function PageEditToolbar({
@@ -33,6 +34,7 @@ export default function PageEditToolbar({
 	setActivePage,
 	selectedBlock,
 	onUpdateBlock,
+	openImageSelector,
 }: Props) {
 	const [activeTab, setActiveTab] = useState<string>('pages');
 	const page = pages[activePage];
@@ -47,7 +49,7 @@ export default function PageEditToolbar({
 	}, [selectedBlock]);
 
 	return (
-		<div className="w-64 border-l border-gray-200 bg-white overflow-auto">
+		<div className="w-[280px] border-l border-gray-200 bg-white overflow-auto">
 			<div className="p-4 border-b border-gray-200">
 				<Tabs value={activeTab} onValueChange={setActiveTab}>
 					<TabsList className="w-full">
@@ -73,10 +75,11 @@ export default function PageEditToolbar({
 											onChange={(id, updatedProps) =>
 												onUpdateBlock?.(id, updatedProps)
 											}
+											openImageSelector={openImageSelector}
 										/>
 									) : (
 										<p className="p-4 text-sm text-muted">
-											No editor for “{selectedBlock.type}” yet.
+											No editor for &quot;{selectedBlock.type}&quot; yet.
 										</p>
 									);
 							  })()
