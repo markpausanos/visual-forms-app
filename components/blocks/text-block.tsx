@@ -55,7 +55,7 @@ export default function TextBlock({
 		editorProps: {
 			attributes: {
 				class:
-					'h-full w-full rounded bg-background p-3 focus:outline-none focus:border focus:border-primary focus:ring-0 focus:border-dashed focus:ring-dashed focus:ring-primary/50',
+					'h-full w-full rounded bg-background p-3 border-none focus:outline-none focus:ring-0',
 			},
 		},
 	});

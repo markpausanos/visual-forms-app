@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { getFlowById, updateFlow } from '@/actions/flows';
-import { uploadJsonToStorage } from '@/actions/storage';
+import { uploadJsonToStorage } from '@/actions/upload-storage';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,6 +42,13 @@ export default function Page() {
 	const [insertAfterBlockId, setInsertAfterBlockId] = useState<string | null>(
 		null
 	);
+
+	// New state for controlling element toolbar and image view
+	const [showElementToolbar, setShowElementToolbar] = useState(false);
+	const [showImageToolbar, setShowImageToolbar] = useState(false);
+
+	// Add a new state to track which block we're replacing
+	const [replacingBlockId, setReplacingBlockId] = useState<string | null>(null);
 
 	useEffect(() => {
 		(async () => {
@@ -165,6 +172,15 @@ export default function Page() {
 		setInsertAfterBlockId(null);
 	};
 
+	// Function to open the image selector
+	const openImageSelector = (blockId?: string) => {
+		if (blockId) {
+			setReplacingBlockId(blockId);
+		}
+		setShowElementToolbar(true);
+		setShowImageToolbar(true);
+	};
+
 	const activePage = pages?.[activePageIndex] ?? null;
 
 	return (
@@ -217,7 +233,13 @@ export default function Page() {
 						handleAddElementWithPosition(block, null);
 					}}
 					onAddElementAfter={handleAddElementAfter}
+					onUpdateBlock={handleUpdateBlock}
 					insertAfterBlockId={insertAfterBlockId}
+					replacingBlockId={replacingBlockId}
+					showElementToolbar={showElementToolbar}
+					setShowElementToolbar={setShowElementToolbar}
+					showImageToolbar={showImageToolbar}
+					setShowImageToolbar={setShowImageToolbar}
 				/>
 
 				<MainCanvas
@@ -254,6 +276,7 @@ export default function Page() {
 					setActivePage={setActivePageIndex}
 					selectedBlock={selectedBlock}
 					onUpdateBlock={handleUpdateBlock}
+					openImageSelector={openImageSelector}
 				/>
 			</div>
 		</div>

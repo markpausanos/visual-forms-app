@@ -13,25 +13,30 @@ export default function ImageBlock({ block }: { block: ImageBlock }) {
 		aspectRatio,
 		fullWidth,
 		fullHeight,
+		fullSize,
 	} = block.props;
 
 	const imageElement = (
 		<img
 			src={src}
 			alt={alt || ''}
+			style={{
+				borderRadius: cornerRadius ? `${cornerRadius}px` : undefined,
+				boxShadow: shadow
+					? `0 4px 12px rgba(0, 0, 0, ${shadow / 100})`
+					: undefined,
+			}}
 			className={cn(
-				'w-full h-auto object-cover transition-all duration-200',
+				'object-cover transition-all duration-200',
 				aspectRatio,
-				cornerRadius,
-				shadow,
-				fullWidth ? 'w-full' : 'w-auto',
-				fullHeight ? 'h-full' : 'h-auto'
+				fullWidth || fullSize ? 'w-full' : 'w-auto',
+				fullHeight || fullSize ? 'h-full' : 'h-auto'
 			)}
 		/>
 	);
 
 	return (
-		<div className="image-block-container">
+		<div>
 			{href ? (
 				<a href={href} target="_blank" rel="noopener noreferrer">
 					{imageElement}

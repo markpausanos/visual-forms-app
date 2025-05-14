@@ -7,14 +7,17 @@ export const blockToolbars: Record<
 	React.ComponentType<{
 		block: AnyBlock;
 		onChange: (id: string, updatedProps: Partial<AnyBlock['props']>) => void;
+		openImageSelector?: (blockId: string) => void;
 	}>
 > = {
 	Text: TextBlockToolbarWrapper as React.ComponentType<{
 		block: AnyBlock;
 		onChange: (id: string, updatedProps: Partial<AnyBlock['props']>) => void;
+		openImageSelector?: (blockId: string) => void;
 	}>,
 	Image: ImageBlockToolbarWrapper as React.ComponentType<{
 		block: AnyBlock;
 		onChange: (id: string, updatedProps: Partial<AnyBlock['props']>) => void;
+		openImageSelector?: (blockId: string) => void;
 	}>,
 };

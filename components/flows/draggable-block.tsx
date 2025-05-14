@@ -143,8 +143,8 @@ export default function DraggableBlock({
 			{/* Block content */}
 			<div
 				className={cn(
-					'block-wrapper p-2 relative',
-					isSelected ? 'bg-gray-50 rounded-md' : ''
+					'p-2 relative',
+					isSelected ? 'border-2 border-foreground rounded-md' : ''
 				)}
 			>
 				<BlockComponent block={block} onChange={onChange} />

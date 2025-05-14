@@ -10,59 +10,82 @@ type ActiveTool = 'elements' | 'sections' | 'design' | 'ai-chat' | null;
 interface MainToolbarProps {
 	onAddElement?: (type: AnyBlock) => void;
 	onAddElementAfter?: (type: AnyBlock, afterBlockId: string) => void;
+	onUpdateBlock?: (
+		blockId: string,
+		updatedProps: Partial<AnyBlock['props']>
+	) => void;
 	insertAfterBlockId?: string | null;
+	replacingBlockId?: string | null;
+	showElementToolbar?: boolean;
+	setShowElementToolbar?: (show: boolean) => void;
+	showImageToolbar?: boolean;
+	setShowImageToolbar?: (show: boolean) => void;
 }
 
 export default function MainToolbar({
 	onAddElement,
 	onAddElementAfter,
+	onUpdateBlock,
 	insertAfterBlockId = null,
+	replacingBlockId = null,
+	showElementToolbar = false,
+	setShowElementToolbar,
+	showImageToolbar = false,
+	setShowImageToolbar,
 }: MainToolbarProps) {
 	const [activeTool, setActiveTool] = useState<ActiveTool>(null);
 	const [hoveredTool, setHoveredTool] = useState<ActiveTool>(null);
+	const [isHovering, setIsHovering] = useState(false);
 
 	// Handle tool click
 	const handleToolClick = (tool: ActiveTool) => {
 		if (activeTool === tool) {
 			setActiveTool(null); // Toggle off if already active
+			setShowElementToolbar?.(false);
 		} else {
 			setActiveTool(tool); // Activate the clicked tool
+			if (tool === 'elements') {
+				setShowElementToolbar?.(true);
+			} else {
+				setShowElementToolbar?.(false);
+			}
 		}
 	};
 
 	// Handle mouse enter
 	const handleMouseEnter = (tool: ActiveTool) => {
-		if (!activeTool) {
-			// Only show preview if no tool is currently active
-			setHoveredTool(tool);
-		}
+		setHoveredTool(tool);
+		setIsHovering(true);
 	};
 
 	// Handle mouse leave
 	const handleMouseLeave = () => {
-		if (!activeTool) {
-			// Only hide preview if no tool is currently active
-			setHoveredTool(null);
-		}
+		setIsHovering(false);
+		setTimeout(() => {
+			if (!isHovering) {
+				setHoveredTool(null);
+			}
+		}, 100);
 	};
 
-	// Force show element toolbar when inserting after a block
+	// Force show element toolbar when inserting after a block or when externally requested
 	useEffect(() => {
-		if (insertAfterBlockId) {
+		if (insertAfterBlockId || showElementToolbar) {
 			setActiveTool('elements');
 		}
-	}, [insertAfterBlockId]);
 
-	// Determine if toolbar should be shown
-	const showElementToolbar =
-		activeTool === 'elements' ||
-		hoveredTool === 'elements' ||
-		insertAfterBlockId !== null;
+		// When an external component wants to show the image toolbar
+		if (showImageToolbar && showElementToolbar) {
+			setActiveTool('elements');
+		}
+	}, [insertAfterBlockId, showElementToolbar, showImageToolbar]);
 
 	// Handle close of Element Toolbar
-	const handleCloseElementToolbar = () => {
+	const handleCloseToolbar = () => {
 		setActiveTool(null);
 		setHoveredTool(null);
+		setShowElementToolbar?.(false);
+		setShowImageToolbar?.(false);
 	};
 
 	// Handle element add with context
@@ -110,16 +133,25 @@ export default function MainToolbar({
 					onMouseLeave={handleMouseLeave}
 				/>
 			</div>
+
 			<div
 				onMouseEnter={() => handleMouseEnter('elements')}
 				onMouseLeave={handleMouseLeave}
+				className="z-50"
 			>
 				<ElementToolbar
-					isOpen={showElementToolbar}
-					onClose={handleCloseElementToolbar}
+					isOpen={
+						activeTool === 'elements' ||
+						(hoveredTool === 'elements' && isHovering) ||
+						showElementToolbar
+					}
+					onClose={handleCloseToolbar}
 					onAddElement={handleElementAdd}
 					onAddElementAfter={onAddElementAfter}
+					onUpdateBlock={onUpdateBlock}
 					insertAfterBlockId={insertAfterBlockId}
+					replacingBlockId={replacingBlockId}
+					initialView={showImageToolbar ? 'images' : 'elements'}
 				/>
 			</div>
 		</div>
