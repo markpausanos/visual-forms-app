@@ -3,7 +3,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { componentMap } from '../blocks/componentMap';
-import { GripVertical, Plus, Pencil, Copy, Trash2 } from 'lucide-react';
+import { GripVertical, Plus, Copy, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AnyBlock } from '@/lib/types/block';
 import { Button } from '@/components/ui/button';
@@ -74,7 +74,7 @@ export default function DraggableBlock({
 		>
 			{/* Block actions toolbar - visible when selected */}
 			{isSelected && (
-				<div className="absolute right-0 top-1/2 transform translate-x-full -translate-y-1/2 bg-white rounded-md shadow-md flex flex-col border border-gray-200 z-999">
+				<div className="absolute right-0 top-1/2 transform translate-x-full -translate-y-1/2 bg-white rounded-md shadow-md flex flex-col border border-gray-200 z-50">
 					<Button
 						variant="ghost"
 						size="icon"
@@ -86,19 +86,6 @@ export default function DraggableBlock({
 						title="Add element below"
 					>
 						<Plus size={16} />
-					</Button>
-
-					<Button
-						variant="ghost"
-						size="icon"
-						className="p-2 hover:bg-gray-100"
-						onClick={(e) => {
-							e.stopPropagation();
-							// Edit functionality (placeholder)
-						}}
-						title="Edit block"
-					>
-						<Pencil size={16} />
 					</Button>
 
 					<Button
@@ -144,7 +131,7 @@ export default function DraggableBlock({
 			<div
 				className={cn(
 					'p-2 relative',
-					isSelected ? 'border-2 border-foreground rounded-md' : ''
+					isSelected ? 'border-2 p-1.5 border-foreground rounded-md' : ''
 				)}
 			>
 				<BlockComponent block={block} onChange={onChange} />
