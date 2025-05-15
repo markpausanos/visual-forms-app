@@ -20,6 +20,8 @@ import {
 	Plus,
 	X,
 	ArrowLeft,
+	Trash2,
+	StickyNote,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -27,7 +29,7 @@ import { Separator } from '@/components/ui/separator';
 import { createBlock } from '@/lib/addBlockHelpers';
 import { AnyBlock } from '@/lib/types/block';
 import { uploadImageToStorage } from '@/actions/upload-storage';
-import { getUserImages } from '@/actions/storage';
+import { deleteUserImage, getUserImages } from '@/actions/storage';
 import { toast } from 'sonner';
 
 // Element category types
@@ -313,6 +315,16 @@ export default function ElementToolbar({
 		}
 	};
 
+	const handleDeleteImage = async (imageName: string) => {
+		try {
+			setUserImages(userImages.filter((img) => img.name !== imageName));
+			await deleteUserImage(imageName);
+			toast.success('Image deleted successfully');
+		} catch (error) {
+			console.error('Error deleting image:', error);
+		}
+	};
+
 	// Toggle category expansion
 	const toggleCategory = (category: ElementCategory) => {
 		if (expandedCategories.includes(category)) {
@@ -494,26 +506,35 @@ export default function ElementToolbar({
 									</div>
 									<p className="text-xs mt-1 truncate">{image.name}</p>
 
-									<div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
-										<Button size="icon" variant="ghost" className="text-white">
+									<div className="absolute inset-0 bg-white bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-70">
+										<Button
+											size="icon"
+											variant="ghost"
+											className="text-black absolute"
+										>
 											<Plus className="h-6 w-6" />
+										</Button>
+										<Button
+											size="icon"
+											variant="ghost"
+											className="text-destructive absolute top-2 right-2"
+											onClick={(e) => {
+												e.stopPropagation();
+												handleDeleteImage(image.name);
+											}}
+										>
+											<Trash2 className="h-5 w-5" />
 										</Button>
 									</div>
 								</div>
 							))
 						) : (
 							<>
-								<div className="bg-muted rounded-md aspect-square flex items-center justify-center">
-									<div className="bg-gray-300 w-1/2 h-1/2 rounded-lg"></div>
-								</div>
-								<div className="bg-muted rounded-md aspect-square flex items-center justify-center">
-									<div className="bg-gray-300 w-1/2 h-1/2 rounded-lg"></div>
-								</div>
-								<div className="bg-muted rounded-md aspect-square flex items-center justify-center">
-									<div className="bg-gray-300 w-1/2 h-1/2 rounded-lg"></div>
-								</div>
-								<div className="bg-muted rounded-md aspect-square flex items-center justify-center">
-									<div className="bg-gray-300 w-1/2 h-1/2 rounded-lg"></div>
+								<div className="flex flex-col items-center justify-center h-full w-full gap-2 bg-muted rounded-md aspect-square">
+									<StickyNote className="h-6 w-6 text-muted-foreground" />
+									<p className="text-muted-foreground text-center text-xs">
+										No images found
+									</p>
 								</div>
 							</>
 						)}
