@@ -47,7 +47,7 @@ export function createBlock(type: AnyBlock['type'], payload: string): AnyBlock {
 					cornerRadius: 0,
 					shadow: 0,
 					fullHeight: false,
-					fullSize: false,
+					fullSize: true,
 				},
 			} as ImageBlock;
 		default:

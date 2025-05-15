@@ -36,9 +36,14 @@ export default function ImageBlock({ block }: { block: ImageBlock }) {
 	);
 
 	return (
-		<div>
+		<div className="flex items-center justify-center w-full">
 			{href ? (
-				<a href={href} target="_blank" rel="noopener noreferrer">
+				<a
+					href={href}
+					target="_blank"
+					rel="noopener noreferrer"
+					className="flex items-center justify-center"
+				>
 					{imageElement}
 				</a>
 			) : (
