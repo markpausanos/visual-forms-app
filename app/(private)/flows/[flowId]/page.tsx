@@ -32,8 +32,6 @@ export default function Page() {
 		'desktop'
 	);
 
-	console.log(pages);
-
 	const [selectedBlock, setSelectedBlock] = useState<{
 		id: string;
 		type: string;
@@ -172,8 +170,7 @@ export default function Page() {
 		setInsertAfterBlockId(null);
 	};
 
-	// Function to open the image selector
-	const openImageSelector = (blockId?: string) => {
+	const handleOpenImageSelector = (blockId?: string) => {
 		if (blockId) {
 			setReplacingBlockId(blockId);
 		}
@@ -272,11 +269,12 @@ export default function Page() {
 
 				<PageEditToolbar
 					pages={pages ?? []}
+					setPages={setPages}
 					activePage={activePageIndex}
 					setActivePage={setActivePageIndex}
 					selectedBlock={selectedBlock}
 					onUpdateBlock={handleUpdateBlock}
-					openImageSelector={openImageSelector}
+					openImageSelector={handleOpenImageSelector}
 				/>
 			</div>
 		</div>
