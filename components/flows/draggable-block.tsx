@@ -10,21 +10,23 @@ import { Button } from '@/components/ui/button';
 
 interface DraggableBlockProps {
 	block: AnyBlock;
-	isSelected: boolean;
+	selectedBlockId: string | null;
 	onSelect: (block: AnyBlock) => void;
 	onChange: (updated: AnyBlock) => void;
 	onAddBelow?: (blockId: string) => void;
 	onDelete?: (blockId: string) => void;
 	insertAfterBlockId?: string | null;
+	parentBlockId?: string;
 }
 
 export default function DraggableBlock({
 	block,
-	isSelected,
+	selectedBlockId,
 	onSelect,
 	onChange,
 	onAddBelow,
 	onDelete,
+	parentBlockId,
 }: DraggableBlockProps) {
 	const {
 		attributes,
@@ -36,9 +38,13 @@ export default function DraggableBlock({
 	} = useSortable({
 		id: block.id,
 		animateLayoutChanges: () => false, // Custom animation handling
+		data: {
+			parentBlockId: parentBlockId,
+		},
 	});
 
 	const BlockComponent = componentMap[block.type];
+	const isSelected = selectedBlockId === block.id;
 
 	const style = {
 		transform: CSS.Transform.toString(transform),
@@ -134,7 +140,14 @@ export default function DraggableBlock({
 					isSelected ? 'border-2 p-1.5 border-foreground rounded-md' : ''
 				)}
 			>
-				<BlockComponent block={block} onChange={onChange} />
+				<BlockComponent
+					block={block}
+					onChange={onChange}
+					onAddBelow={onAddBelow}
+					onDelete={onDelete}
+					onSelect={onSelect}
+					selectedBlockId={selectedBlockId}
+				/>
 			</div>
 		</div>
 	);

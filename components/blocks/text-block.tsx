@@ -81,12 +81,18 @@ export default function TextBlock({
 	if (!editor) return null;
 
 	return (
-		<div
-			className={cn('space-y-2', block.props.textAlign, block.props.size)}
-			data-block-id={block.id}
-		>
-			{/* The editor */}
-			<EditorContent editor={editor} />
+		<div className="w-full flex mx-auto max-w-xl justify-center items-center">
+			<div
+				className={cn(
+					'space-y-2 w-full',
+					block.props.textAlign,
+					block.props.size
+				)}
+				data-block-id={block.id}
+			>
+				{/* The editor */}
+				<EditorContent editor={editor} />
+			</div>
 		</div>
 	);
 }

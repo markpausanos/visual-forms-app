@@ -96,7 +96,14 @@ export default function MainCanvas({
 	const handleBlockSelect = (block: AnyBlock | null) => {
 		setSelectedBlockId(block?.id || null);
 		if (onSelectBlock) {
+			// Create a proper block object with id and type for the toolbar
 			onSelectBlock(block ? { id: block.id, type: block.type } : null);
+
+			// For debugging
+			console.log(
+				'Selected block:',
+				block ? { id: block.id, type: block.type } : null
+			);
 		}
 	};
 
@@ -114,10 +121,145 @@ export default function MainCanvas({
 		const { active, over } = event;
 		setActiveBlock(null);
 
-		if (over && active.id !== over.id) {
+		if (!over) return;
+
+		// Get data attribute that might contain parent info
+		const parentBlockId = (active.data?.current as any)?.parentBlockId;
+
+		if (active.id !== over.id) {
 			const activePage = pages[activePageIndex];
 
-			// Find the indices of the blocks
+			// Check if the over block is a layout block
+			const overBlock = activePage.blocks.find((block) => block.id === over.id);
+			if (overBlock && overBlock.type === 'Layout') {
+				// We're dropping a block into a layout block
+				const sourceBlock = parentBlockId
+					? getBlockFromLayout(
+							activePage.blocks,
+							parentBlockId,
+							active.id as string
+					  )
+					: activePage.blocks.find((block) => block.id === active.id);
+
+				if (sourceBlock) {
+					// Create a new pages array
+					const updatedPages = [...pages];
+					const updatedBlocks = [...activePage.blocks];
+
+					// If the block is coming from another layout, remove it from there
+					if (parentBlockId) {
+						const parentBlock = updatedBlocks.find(
+							(block) => block.id === parentBlockId
+						) as any;
+						if (parentBlock && parentBlock.children) {
+							parentBlock.children = parentBlock.children.filter(
+								(child: any) => child.id !== active.id
+							);
+						}
+					} else {
+						// Remove the block from main canvas
+						const blockIndex = updatedBlocks.findIndex(
+							(block) => block.id === active.id
+						);
+						if (blockIndex !== -1) {
+							updatedBlocks.splice(blockIndex, 1);
+						}
+					}
+
+					// Add the block to the layout's children
+					const targetLayout = updatedBlocks.find(
+						(block) => block.id === over.id
+					) as any;
+					if (targetLayout) {
+						// Ensure children array is initialized
+						targetLayout.children = targetLayout.children || [];
+
+						// Ensure props is initialized
+						targetLayout.props = targetLayout.props || {};
+
+						// Add the block to the layout's children
+						targetLayout.children = [...targetLayout.children, sourceBlock];
+
+						// For debugging
+						console.log('Added block to layout:', {
+							layoutId: targetLayout.id,
+							blockId: sourceBlock.id,
+							childrenCount: targetLayout.children.length,
+						});
+					}
+
+					// Update the page with the new blocks
+					updatedPages[activePageIndex] = {
+						...activePage,
+						blocks: updatedBlocks,
+					};
+
+					setPages(updatedPages);
+					return;
+				}
+			}
+
+			// Check if the block is from a layout block
+			if (parentBlockId) {
+				// Find the parent layout block
+				const parentLayoutBlock = activePage.blocks.find(
+					(block) => block.id === parentBlockId
+				) as any; // Cast to any for accessing children
+
+				if (parentLayoutBlock && parentLayoutBlock.children) {
+					// Find the block in the parent's children
+					const blockIndex = parentLayoutBlock.children.findIndex(
+						(child: any) => child.id === active.id
+					);
+
+					if (blockIndex !== -1) {
+						// Get the block from parent's children
+						const blockToMove = parentLayoutBlock.children[blockIndex];
+
+						// Remove from parent
+						const updatedChildren = [
+							...parentLayoutBlock.children.slice(0, blockIndex),
+							...parentLayoutBlock.children.slice(blockIndex + 1),
+						];
+
+						// Find where to insert in main canvas
+						const overIndex = activePage.blocks.findIndex(
+							(block) => block.id === over.id
+						);
+
+						// Update layout block without the moved child
+						const updatedLayoutBlock = {
+							...parentLayoutBlock,
+							children: updatedChildren,
+						};
+
+						// Create new blocks array with the block moved to main canvas
+						const newBlocks = [...activePage.blocks];
+						// Replace the layout block with updated version
+						const layoutBlockIndex = newBlocks.findIndex(
+							(block) => block.id === parentBlockId
+						);
+						if (layoutBlockIndex !== -1) {
+							newBlocks[layoutBlockIndex] = updatedLayoutBlock;
+						}
+
+						// Insert the moved block after the target
+						newBlocks.splice(overIndex + 1, 0, blockToMove);
+
+						// Update pages with the new blocks
+						const updatedPages = [...pages];
+						updatedPages[activePageIndex] = {
+							...activePage,
+							blocks: newBlocks,
+						};
+
+						setPages(updatedPages);
+						return;
+					}
+				}
+			}
+
+			// Standard reordering for top-level blocks
 			const oldIndex = activePage.blocks.findIndex(
 				(block) => block.id === active.id
 			);
@@ -136,6 +278,25 @@ export default function MainCanvas({
 			// Update pages
 			setPages(reorderedPages);
 		}
+	};
+
+	// Helper function to get a block from a layout
+	const getBlockFromLayout = (
+		blocks: AnyBlock[],
+		layoutId: string,
+		blockId: string
+	): AnyBlock | null => {
+		const layoutBlock = blocks.find((block) => block.id === layoutId) as any;
+		if (layoutBlock && Array.isArray(layoutBlock.children)) {
+			const foundBlock = layoutBlock.children.find(
+				(child: any) => child.id === blockId
+			);
+			if (foundBlock) {
+				return foundBlock;
+			}
+		}
+		console.log('Block not found in layout:', { layoutId, blockId });
+		return null;
 	};
 
 	return (
@@ -168,7 +329,7 @@ export default function MainCanvas({
 										<DraggableBlock
 											key={block.id}
 											block={block}
-											isSelected={selectedBlockId === block.id}
+											selectedBlockId={selectedBlockId}
 											onSelect={handleBlockSelect}
 											onChange={handleBlockChange}
 											onAddBelow={onAddElementBelow}

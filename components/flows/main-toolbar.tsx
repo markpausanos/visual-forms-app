@@ -9,7 +9,11 @@ type ActiveTool = 'elements' | 'sections' | 'design' | 'ai-chat' | null;
 
 interface MainToolbarProps {
 	onAddElement?: (type: AnyBlock) => void;
-	onAddElementAfter?: (type: AnyBlock, afterBlockId: string) => void;
+	onAddElementAfter?: (
+		type: AnyBlock,
+		afterBlockId: string,
+		layoutBlockId?: string | null
+	) => void;
 	onUpdateBlock?: (
 		blockId: string,
 		updatedProps: Partial<AnyBlock['props']>
@@ -91,7 +95,7 @@ export default function MainToolbar({
 	// Handle element add with context
 	const handleElementAdd = (block: AnyBlock) => {
 		if (insertAfterBlockId) {
-			onAddElementAfter?.(block, insertAfterBlockId);
+			onAddElementAfter?.(block, insertAfterBlockId, null);
 		} else {
 			onAddElement?.(block);
 		}

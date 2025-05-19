@@ -22,6 +22,7 @@ import {
 	ArrowLeft,
 	Trash2,
 	StickyNote,
+	Layout,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -49,7 +50,11 @@ interface ElementToolbarProps {
 	isOpen: boolean;
 	onClose: () => void;
 	onAddElement?: (type: AnyBlock) => void;
-	onAddElementAfter?: (type: AnyBlock, afterBlockId: string) => void;
+	onAddElementAfter?: (
+		type: AnyBlock,
+		afterBlockId: string,
+		layoutBlockId?: string | null
+	) => void;
 	onUpdateBlock?: (
 		blockId: string,
 		updatedProps: Partial<AnyBlock['props']>
@@ -238,6 +243,24 @@ export default function ElementToolbar({
 			name: 'Countdown',
 			icon: <Clock size={24} className="text-muted-foreground" />,
 			category: 'Basic',
+		},
+		// for testing Layout block
+		{
+			id: 'layout',
+			name: 'Layout',
+			icon: <Layout size={24} className="text-muted-foreground" />,
+			category: 'Basic',
+			onClick: () => {
+				if (insertAfterBlockId) {
+					onAddElementAfter?.(
+						createBlock('Layout', '<p>Hello</p>'),
+						insertAfterBlockId
+					);
+				} else {
+					onAddElement?.(createBlock('Layout', '<p>Hello</p>'));
+				}
+				onClose();
+			},
 		},
 
 		// Questions category

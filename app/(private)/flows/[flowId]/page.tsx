@@ -17,7 +17,7 @@ import MainCanvas from '@/components/flows/main-canvas';
 import PageEditToolbar from '@/components/flows/page-edit-toolbar';
 import { Page as FlowPage } from '@/components/blocks/componentMap';
 import { blockMapper } from '@/lib/utils/block-utils';
-import { AnyBlock } from '@/lib/types/block';
+import { AnyBlock, LayoutBlock } from '@/lib/types/block';
 
 export default function Page() {
 	const { flowId } = useParams<{ flowId: string }>();
@@ -128,12 +128,32 @@ export default function Page() {
 
 	const handleAddElementWithPosition = (
 		block: AnyBlock,
-		afterBlockId: string | null
+		afterBlockId: string | null,
+		layoutBlockId: string | null
 	) => {
-		setPages((pages) => {
-			const next = [...pages];
+		setPages((prevPages) => {
+			const next = [...prevPages];
 			const activePage = next[activePageIndex];
 
+			// If we have a layout block ID, add the block to that layout's children
+			if (layoutBlockId) {
+				next[activePageIndex] = {
+					...activePage,
+					blocks: activePage.blocks.map((b) => {
+						if (b.id !== layoutBlockId) return b;
+						if (b.type !== 'Layout') return b;
+
+						// Add block to layout's children
+						return {
+							...b,
+							children: [...(b.children || []), block],
+						} as LayoutBlock;
+					}),
+				};
+				return next;
+			}
+
+			// Handle normal block insertion
 			if (!afterBlockId) {
 				next[activePageIndex] = {
 					...activePage,
@@ -165,8 +185,12 @@ export default function Page() {
 		});
 	};
 
-	const handleAddElementAfter = (block: AnyBlock, afterBlockId: string) => {
-		handleAddElementWithPosition(block, afterBlockId);
+	const handleAddElementAfter = (
+		block: AnyBlock,
+		afterBlockId: string,
+		layoutBlockId: string | null
+	) => {
+		handleAddElementWithPosition(block, afterBlockId, layoutBlockId);
 		setInsertAfterBlockId(null);
 	};
 
@@ -227,9 +251,11 @@ export default function Page() {
 			<div className="flex flex-1 overflow-hidden">
 				<MainToolbar
 					onAddElement={(block: AnyBlock) => {
-						handleAddElementWithPosition(block, null);
+						handleAddElementWithPosition(block, null, null);
 					}}
-					onAddElementAfter={handleAddElementAfter}
+					onAddElementAfter={(block: AnyBlock, afterBlockId: string) => {
+						handleAddElementAfter(block, afterBlockId, null);
+					}}
 					onUpdateBlock={handleUpdateBlock}
 					insertAfterBlockId={insertAfterBlockId}
 					replacingBlockId={replacingBlockId}

@@ -64,7 +64,9 @@ export default function PageEditToolbar({
 }: Props) {
 	const [activeTab, setActiveTab] = useState<string>('pages');
 	const page = pages[activePage];
-	const currentBlock = page?.blocks.find((b) => b.id === selectedBlock?.id);
+	const currentBlock = selectedBlock
+		? findBlockInPage(page?.blocks || [], selectedBlock.id)
+		: undefined;
 	const [activePageItem, setActivePageItem] = useState<Page | null>(null);
 
 	// Configure sensors for drag detection
@@ -85,6 +87,9 @@ export default function PageEditToolbar({
 	);
 
 	useEffect(() => {
+		// For debugging
+		console.log('Selected block in toolbar:', selectedBlock);
+
 		if (selectedBlock) {
 			setActiveTab('edit');
 		} else {
@@ -381,3 +386,25 @@ function DraggablePageCard({
 		</div>
 	);
 }
+
+// Find the current block based on the selected block ID, looking in all blocks including children
+const findBlockInPage = (
+	blocks: AnyBlock[],
+	blockId: string
+): AnyBlock | undefined => {
+	// First search in top-level blocks
+	let foundBlock = blocks.find((b) => b.id === blockId);
+	if (foundBlock) return foundBlock;
+
+	// Then search in layout blocks' children
+	for (const block of blocks) {
+		if (block.type === 'Layout' && Array.isArray((block as any).children)) {
+			foundBlock = (block as any).children.find(
+				(child: AnyBlock) => child.id === blockId
+			);
+			if (foundBlock) return foundBlock;
+		}
+	}
+
+	return undefined;
+};

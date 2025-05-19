@@ -26,9 +26,16 @@ export type ImageBlockProps = {
 	fullSize?: boolean;
 };
 
+export type LayoutBlockProps = {
+	gap?: number;
+};
+
 // Create specific block types
 export type TextBlock = Block<'Text', TextBlockProps>;
 export type ImageBlock = Block<'Image', ImageBlockProps>;
+export interface LayoutBlock extends Block<'Layout', LayoutBlockProps> {
+	children: AnyBlock[];
+}
 
 // Union type for all blocks
-export type AnyBlock = TextBlock | ImageBlock;
+export type AnyBlock = TextBlock | ImageBlock | LayoutBlock;

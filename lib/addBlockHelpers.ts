@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { v4 as uuid } from 'uuid';
-import { AnyBlock, TextBlock, ImageBlock } from '@/lib/types/block';
+import {
+	AnyBlock,
+	TextBlock,
+	ImageBlock,
+	LayoutBlock,
+} from '@/lib/types/block';
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 
@@ -50,6 +55,30 @@ export function createBlock(type: AnyBlock['type'], payload: string): AnyBlock {
 					fullSize: true,
 				},
 			} as ImageBlock;
+		case 'Layout':
+			return {
+				id: uuid(),
+				type: 'Layout',
+				props: {
+					children: [
+						{
+							id: uuid(),
+							type: 'Text',
+							props: {
+								html: payload,
+							},
+						},
+						{
+							id: uuid(),
+							type: 'Text',
+							props: {
+								html: payload,
+							},
+						},
+					],
+					gap: 16,
+				},
+			} as LayoutBlock;
 		default:
 			throw new Error(`Unknown block type: ${type}`);
 	}
