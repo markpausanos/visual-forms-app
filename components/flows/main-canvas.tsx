@@ -22,6 +22,9 @@ import {
 import DraggableBlock from './draggable-block';
 import { reorderBlocks } from '@/lib/dnd-utils';
 import { AnyBlock } from '@/lib/types/block';
+import { toast } from 'sonner';
+import { useDroppable } from '@dnd-kit/core';
+import { v4 as uuidv4 } from 'uuid';
 
 interface MainCanvasProps {
 	page: Page | null;
@@ -70,6 +73,16 @@ export default function MainCanvas({
 		})
 	);
 
+	// Make the main canvas droppable
+	const { setNodeRef: setCanvasNodeRef } = useDroppable({
+		id: 'main-canvas',
+		data: {
+			type: 'Canvas',
+			accepts: ['Text', 'Image', 'Layout', 'Column', 'ColumnWrapper'],
+			isContainer: true,
+		},
+	});
+
 	if (!pages) {
 		return (
 			<div className="flex-1 p-8 flex justify-center overflow-hidden">
@@ -117,78 +130,138 @@ export default function MainCanvas({
 		}
 	};
 
+	// Helper function to check if a block is a column wrapper
+	const isColumnWrapper = (block: AnyBlock): boolean => {
+		return block.type === 'ColumnWrapper';
+	};
+
+	// Helper function to check if a block is a column block
+	const isColumnBlock = (block: AnyBlock): boolean => {
+		return block.type === 'Column';
+	};
+
 	const handleDragEnd = (event: DragEndEvent) => {
 		const { active, over } = event;
 		setActiveBlock(null);
 
 		if (!over) return;
 
-		// Get data attribute that might contain parent info
-		const parentBlockId = (active.data?.current as any)?.parentBlockId;
+		// Get data attributes that might contain parent info
+		const sourceParentId = (active.data?.current as any)?.parentBlockId;
+		const destinationParentId = (over.data?.current as any)?.parentBlockId;
+
+		console.log('Drag end:', {
+			sourceId: active.id,
+			sourceParent: sourceParentId,
+			destinationId: over.id,
+			destinationParent: destinationParentId,
+		});
 
 		if (active.id !== over.id) {
 			const activePage = pages[activePageIndex];
 
-			// Check if the over block is a layout block
-			const overBlock = activePage.blocks.find((block) => block.id === over.id);
-			if (overBlock && overBlock.type === 'Layout') {
-				// We're dropping a block into a layout block
-				const sourceBlock = parentBlockId
-					? getBlockFromLayout(
-							activePage.blocks,
-							parentBlockId,
-							active.id as string
-					  )
-					: activePage.blocks.find((block) => block.id === active.id);
+			// CASE 1: Reordering within the same column
+			if (
+				sourceParentId &&
+				destinationParentId &&
+				sourceParentId === destinationParentId
+			) {
+				// Find the parent block (column)
+				const parentBlock = findBlockById(activePage.blocks, sourceParentId);
+				if (parentBlock && Array.isArray((parentBlock as any).children)) {
+					// Find the indices of the blocks
+					const oldIndex = (parentBlock as any).children.findIndex(
+						(child: any) => child.id === active.id
+					);
+					const newIndex = (parentBlock as any).children.findIndex(
+						(child: any) => child.id === over.id
+					);
 
+					if (oldIndex !== -1 && newIndex !== -1) {
+						// Create a copy of the blocks array
+						const updatedPages = [...pages];
+						const updatedBlocks = structuredClone(activePage.blocks);
+
+						// Find parent block in the copy
+						const updatedParent = findBlockById(updatedBlocks, sourceParentId);
+						if (
+							updatedParent &&
+							Array.isArray((updatedParent as any).children)
+						) {
+							// Reorder the children
+							const children = [...(updatedParent as any).children];
+							const [movedBlock] = children.splice(oldIndex, 1);
+							children.splice(newIndex, 0, movedBlock);
+
+							// Update the parent's children
+							(updatedParent as any).children = children;
+
+							// Update the pages
+							updatedPages[activePageIndex] = {
+								...activePage,
+								blocks: updatedBlocks,
+							};
+
+							setPages(updatedPages);
+							return;
+						}
+					}
+				}
+			}
+
+			// CASE 2: Moving from a column to main canvas
+			if (
+				sourceParentId &&
+				(!destinationParentId || over.id === 'main-canvas')
+			) {
+				// Get the block from the column
+				const sourceBlock = getBlockFromLayout(
+					activePage.blocks,
+					sourceParentId,
+					active.id as string
+				);
 				if (sourceBlock) {
-					// Create a new pages array
-					const updatedPages = [...pages];
-					const updatedBlocks = [...activePage.blocks];
-
-					// If the block is coming from another layout, remove it from there
-					if (parentBlockId) {
-						const parentBlock = updatedBlocks.find(
-							(block) => block.id === parentBlockId
-						) as any;
-						if (parentBlock && parentBlock.children) {
-							parentBlock.children = parentBlock.children.filter(
-								(child: any) => child.id !== active.id
-							);
-						}
-					} else {
-						// Remove the block from main canvas
-						const blockIndex = updatedBlocks.findIndex(
-							(block) => block.id === active.id
+					// Prevent Column blocks from being moved outside of ColumnWrapper
+					if (isColumnBlock(sourceBlock)) {
+						toast.error(
+							'Column blocks can only be used inside a Column Wrapper'
 						);
-						if (blockIndex !== -1) {
-							updatedBlocks.splice(blockIndex, 1);
+						return;
+					}
+
+					// Create new blocks array
+					const updatedPages = [...pages];
+					const updatedBlocks = structuredClone(activePage.blocks);
+
+					// Remove the block from its parent
+					const updatedParent = findBlockById(updatedBlocks, sourceParentId);
+					if (updatedParent && Array.isArray((updatedParent as any).children)) {
+						(updatedParent as any).children = (
+							updatedParent as any
+						).children.filter((child: any) => child.id !== active.id);
+					}
+
+					// Find where to insert in main canvas
+					// If we're dragging to the main-canvas itself or can't find a specific target,
+					// add to the end of the main canvas
+					if (over.id === 'main-canvas') {
+						// Add to the end of canvas
+						updatedBlocks.push(sourceBlock);
+					} else {
+						// Try to insert after the specific block
+						const overIndex = updatedBlocks.findIndex(
+							(block) => block.id === over.id
+						);
+
+						if (overIndex !== -1) {
+							updatedBlocks.splice(overIndex + 1, 0, sourceBlock);
+						} else {
+							// Fallback - add to the end
+							updatedBlocks.push(sourceBlock);
 						}
 					}
 
-					// Add the block to the layout's children
-					const targetLayout = updatedBlocks.find(
-						(block) => block.id === over.id
-					) as any;
-					if (targetLayout) {
-						// Ensure children array is initialized
-						targetLayout.children = targetLayout.children || [];
-
-						// Ensure props is initialized
-						targetLayout.props = targetLayout.props || {};
-
-						// Add the block to the layout's children
-						targetLayout.children = [...targetLayout.children, sourceBlock];
-
-						// For debugging
-						console.log('Added block to layout:', {
-							layoutId: targetLayout.id,
-							blockId: sourceBlock.id,
-							childrenCount: targetLayout.children.length,
-						});
-					}
-
-					// Update the page with the new blocks
+					// Update the pages
 					updatedPages[activePageIndex] = {
 						...activePage,
 						blocks: updatedBlocks,
@@ -199,58 +272,52 @@ export default function MainCanvas({
 				}
 			}
 
-			// Check if the block is from a layout block
-			if (parentBlockId) {
-				// Find the parent layout block
-				const parentLayoutBlock = activePage.blocks.find(
-					(block) => block.id === parentBlockId
-				) as any; // Cast to any for accessing children
+			// CASE 3: Moving from main canvas to column
+			if (!sourceParentId && destinationParentId) {
+				// Get the block from main canvas
+				const sourceBlock = activePage.blocks.find(
+					(block) => block.id === active.id
+				);
 
-				if (parentLayoutBlock && parentLayoutBlock.children) {
-					// Find the block in the parent's children
-					const blockIndex = parentLayoutBlock.children.findIndex(
-						(child: any) => child.id === active.id
+				if (sourceBlock) {
+					// Find the destination column
+					const destinationParent = findBlockById(
+						activePage.blocks,
+						destinationParentId
 					);
+					if (
+						destinationParent &&
+						Array.isArray((destinationParent as any).children)
+					) {
+						// Create new blocks array
+						const updatedPages = [...pages];
+						const updatedBlocks = structuredClone(activePage.blocks);
 
-					if (blockIndex !== -1) {
-						// Get the block from parent's children
-						const blockToMove = parentLayoutBlock.children[blockIndex];
-
-						// Remove from parent
-						const updatedChildren = [
-							...parentLayoutBlock.children.slice(0, blockIndex),
-							...parentLayoutBlock.children.slice(blockIndex + 1),
-						];
-
-						// Find where to insert in main canvas
-						const overIndex = activePage.blocks.findIndex(
-							(block) => block.id === over.id
+						// Remove the block from main canvas
+						const sourceIndex = updatedBlocks.findIndex(
+							(block) => block.id === active.id
 						);
-
-						// Update layout block without the moved child
-						const updatedLayoutBlock = {
-							...parentLayoutBlock,
-							children: updatedChildren,
-						};
-
-						// Create new blocks array with the block moved to main canvas
-						const newBlocks = [...activePage.blocks];
-						// Replace the layout block with updated version
-						const layoutBlockIndex = newBlocks.findIndex(
-							(block) => block.id === parentBlockId
-						);
-						if (layoutBlockIndex !== -1) {
-							newBlocks[layoutBlockIndex] = updatedLayoutBlock;
+						if (sourceIndex !== -1) {
+							updatedBlocks.splice(sourceIndex, 1);
 						}
 
-						// Insert the moved block after the target
-						newBlocks.splice(overIndex + 1, 0, blockToMove);
+						// Find the destination column in the updated blocks
+						const updatedDestination = findBlockById(
+							updatedBlocks,
+							destinationParentId
+						);
+						if (
+							updatedDestination &&
+							Array.isArray((updatedDestination as any).children)
+						) {
+							// Add the block to the column
+							(updatedDestination as any).children.push(sourceBlock);
+						}
 
-						// Update pages with the new blocks
-						const updatedPages = [...pages];
+						// Update the pages
 						updatedPages[activePageIndex] = {
 							...activePage,
-							blocks: newBlocks,
+							blocks: updatedBlocks,
 						};
 
 						setPages(updatedPages);
@@ -259,7 +326,159 @@ export default function MainCanvas({
 				}
 			}
 
-			// Standard reordering for top-level blocks
+			// CASE 4: Moving between different columns
+			if (
+				sourceParentId &&
+				destinationParentId &&
+				sourceParentId !== destinationParentId
+			) {
+				// Get the block from source column
+				const sourceBlock = getBlockFromLayout(
+					activePage.blocks,
+					sourceParentId,
+					active.id as string
+				);
+				if (sourceBlock) {
+					// Create new blocks array
+					const updatedPages = [...pages];
+					const updatedBlocks = structuredClone(activePage.blocks);
+
+					// Remove the block from its parent
+					const updatedSourceParent = findBlockById(
+						updatedBlocks,
+						sourceParentId
+					);
+					if (
+						updatedSourceParent &&
+						Array.isArray((updatedSourceParent as any).children)
+					) {
+						(updatedSourceParent as any).children = (
+							updatedSourceParent as any
+						).children.filter((child: any) => child.id !== active.id);
+					}
+
+					// Add the block to the destination column
+					const updatedDestination = findBlockById(
+						updatedBlocks,
+						destinationParentId
+					);
+					if (
+						updatedDestination &&
+						Array.isArray((updatedDestination as any).children)
+					) {
+						// Find the position to insert at
+						const overIndex = (updatedDestination as any).children.findIndex(
+							(child: any) => child.id === over.id
+						);
+
+						if (overIndex !== -1) {
+							// Insert after the over block
+							(updatedDestination as any).children.splice(
+								overIndex + 1,
+								0,
+								sourceBlock
+							);
+						} else {
+							// Add to the end
+							(updatedDestination as any).children.push(sourceBlock);
+						}
+					}
+
+					// Update the pages
+					updatedPages[activePageIndex] = {
+						...activePage,
+						blocks: updatedBlocks,
+					};
+
+					setPages(updatedPages);
+					return;
+				}
+			}
+
+			// NEW CASE: Moving from main canvas or another container directly to a Column Wrapper
+			const overDestinationType = (over.data?.current as any)?.type;
+			if (overDestinationType === 'ColumnWrapper') {
+				// Get the block being dragged (either from main canvas or another container)
+				const sourceBlock = sourceParentId
+					? getBlockFromLayout(
+							activePage.blocks,
+							sourceParentId,
+							active.id as string
+					  )
+					: activePage.blocks.find((block) => block.id === active.id);
+
+				if (sourceBlock) {
+					// Don't allow column wrapper to be dropped inside a column wrapper
+					if (isColumnWrapper(sourceBlock)) {
+						toast.error(
+							'Cannot drop a Column Wrapper inside another Column Wrapper'
+						);
+						return;
+					}
+
+					// Create new blocks array
+					const updatedPages = [...pages];
+					const updatedBlocks = structuredClone(activePage.blocks);
+
+					// Find the column wrapper we're dropping into
+					const columnWrapper = findBlockById(updatedBlocks, over.id as string);
+					if (columnWrapper && columnWrapper.type === 'ColumnWrapper') {
+						// If the max columns is reached, show error
+						const MAX_COLUMNS = 4;
+						if (columnWrapper.children.length >= MAX_COLUMNS) {
+							toast.error(`Maximum of ${MAX_COLUMNS} columns reached`);
+							return;
+						}
+
+						// Create a new column to wrap the block
+						const newColumn = {
+							id: uuidv4(),
+							type: 'Column' as const,
+							props: {
+								backgroundColor: 'transparent',
+								padding: 16,
+							},
+							children: [sourceBlock],
+						};
+
+						// Remove the block from its source
+						if (sourceParentId) {
+							// Remove from previous container
+							const sourceParent = findBlockById(updatedBlocks, sourceParentId);
+							if (
+								sourceParent &&
+								Array.isArray((sourceParent as any).children)
+							) {
+								(sourceParent as any).children = (
+									sourceParent as any
+								).children.filter((child: any) => child.id !== active.id);
+							}
+						} else {
+							// Remove from main canvas
+							const blockIndex = updatedBlocks.findIndex(
+								(block) => block.id === active.id
+							);
+							if (blockIndex !== -1) {
+								updatedBlocks.splice(blockIndex, 1);
+							}
+						}
+
+						// Add the new column to the column wrapper
+						columnWrapper.children.push(newColumn);
+
+						// Update the pages
+						updatedPages[activePageIndex] = {
+							...activePage,
+							blocks: updatedBlocks,
+						};
+
+						setPages(updatedPages);
+						return;
+					}
+				}
+			}
+
+			// CASE 5: Standard reordering for top-level blocks (original logic)
 			const oldIndex = activePage.blocks.findIndex(
 				(block) => block.id === active.id
 			);
@@ -278,6 +497,100 @@ export default function MainCanvas({
 			// Update pages
 			setPages(reorderedPages);
 		}
+	};
+
+	// Helper function to handle dropping a block into a column
+	const handleDropIntoColumn = (
+		active: any,
+		over: any,
+		parentBlockId: string | undefined,
+		activePage: Page,
+		columnBlock: any
+	) => {
+		// Get the source block
+		const sourceBlock = parentBlockId
+			? getBlockFromLayout(
+					activePage.blocks,
+					parentBlockId,
+					active.id as string
+			  )
+			: activePage.blocks.find((block) => block.id === active.id);
+
+		if (!sourceBlock) return;
+
+		// Don't allow column wrapper to be dropped inside a column
+		if (isColumnWrapper(sourceBlock)) {
+			toast.error(
+				'Column Wrapper blocks cannot be placed inside Column blocks'
+			);
+			return;
+		}
+
+		// Create a new pages array
+		const updatedPages = [...pages];
+		const updatedBlocks = [...activePage.blocks];
+
+		// If the block is coming from another layout or column, remove it from there
+		if (parentBlockId) {
+			// Find parent block (might be layout or column)
+			const parentBlock = findBlockById(updatedBlocks, parentBlockId);
+			if (parentBlock && Array.isArray((parentBlock as any).children)) {
+				(parentBlock as any).children = (parentBlock as any).children.filter(
+					(child: any) => child.id !== active.id
+				);
+			}
+		} else {
+			// Remove the block from main canvas
+			const blockIndex = updatedBlocks.findIndex(
+				(block) => block.id === active.id
+			);
+			if (blockIndex !== -1) {
+				updatedBlocks.splice(blockIndex, 1);
+			}
+		}
+
+		// Add the block to the column's children
+		columnBlock.children = columnBlock.children || [];
+		columnBlock.children = [...columnBlock.children, sourceBlock];
+
+		// Update the page with the new blocks
+		updatedPages[activePageIndex] = {
+			...activePage,
+			blocks: updatedBlocks,
+		};
+
+		setPages(updatedPages);
+	};
+
+	// Helper function to find a block by ID anywhere in the block tree
+	const findBlockById = (
+		blocks: AnyBlock[],
+		blockId: string
+	): AnyBlock | null => {
+		// First check top level blocks
+		const topLevelBlock = blocks.find((block) => block.id === blockId);
+		if (topLevelBlock) return topLevelBlock;
+
+		// Then check nested blocks
+		for (const block of blocks) {
+			if ((block as any).children) {
+				for (const child of (block as any).children) {
+					if (child.id === blockId) return child;
+
+					// Check one level deeper for column wrappers
+					if (
+						child.type === 'ColumnWrapper' &&
+						Array.isArray((child as any).children)
+					) {
+						for (const columnChild of (child as any).children) {
+							if (columnChild.id === blockId) return columnChild;
+						}
+					}
+				}
+			}
+		}
+
+		return null;
 	};
 
 	// Helper function to get a block from a layout
@@ -305,6 +618,7 @@ export default function MainCanvas({
 			<div className="flex-1 overflow-auto p-0 pt-10 pb-20">
 				<div className="flex p-0 justify-center min-h-full">
 					<div
+						ref={setCanvasNodeRef}
 						className={`w-full flex flex-col bg-white rounded-md shadow-sm p-0 overflow-visible transition-all duration-500 mb-4 ${
 							previewMode === 'mobile' ? 'max-w-sm' : 'max-w-[960px]'
 						}`}
@@ -334,6 +648,7 @@ export default function MainCanvas({
 											onChange={handleBlockChange}
 											onAddBelow={onAddElementBelow}
 											onDelete={onDelete}
+											previewMode={previewMode}
 										/>
 									))}
 								</SortableContext>

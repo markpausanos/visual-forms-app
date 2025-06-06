@@ -17,7 +17,12 @@ import MainCanvas from '@/components/flows/main-canvas';
 import PageEditToolbar from '@/components/flows/page-edit-toolbar';
 import { Page as FlowPage } from '@/components/blocks/componentMap';
 import { blockMapper } from '@/lib/utils/block-utils';
-import { AnyBlock, LayoutBlock } from '@/lib/types/block';
+import {
+	AnyBlock,
+	LayoutBlock,
+	ColumnBlock,
+	ColumnWrapperBlock,
+} from '@/lib/types/block';
 
 export default function Page() {
 	const { flowId } = useParams<{ flowId: string }>();
@@ -108,22 +113,67 @@ export default function Page() {
 		setPages((current) =>
 			current.map((page, idx) => {
 				if (idx !== activePageIndex) return page;
+
+				// Clone the blocks array
+				const updatedBlocks = [...page.blocks];
+
+				// Try to update the block at any level of nesting
+				const updatedBlocksWithNestedChanges = updateBlockAtAnyLevel(
+					updatedBlocks,
+					blockId,
+					updatedProps
+				);
+
 				return {
 					...page,
-					blocks: page.blocks.map((block) => {
-						if (block.id !== blockId) return block;
-
-						return {
-							...block,
-							props: {
-								...block.props,
-								...updatedProps,
-							},
-						} as AnyBlock;
-					}),
+					blocks: updatedBlocksWithNestedChanges,
 				};
 			})
 		);
+	};
+
+	// Recursive function to update a block at any level of nesting
+	const updateBlockAtAnyLevel = (
+		blocks: AnyBlock[],
+		blockId: string,
+		updatedProps: Partial<AnyBlock['props']>
+	): AnyBlock[] => {
+		// First try to update blocks at the current level
+		const updatedBlocks = blocks.map((block) => {
+			// If this is the block we're looking for, update its props
+			if (block.id === blockId) {
+				return {
+					...block,
+					props: {
+						...block.props,
+						...updatedProps,
+					},
+				} as AnyBlock;
+			}
+
+			// If this block has children, recursively update them
+			if ('children' in block && Array.isArray(block.children)) {
+				// Recursively update children
+				const updatedChildren = updateBlockAtAnyLevel(
+					block.children as AnyBlock[],
+					blockId,
+					updatedProps
+				);
+
+				// If children have changed, return updated block
+				if (updatedChildren !== block.children) {
+					return {
+						...block,
+						children: updatedChildren,
+					} as AnyBlock;
+				}
+			}
+
+			// No change to this block
+			return block;
+		});
+
+		return updatedBlocks;
 	};
 
 	const handleAddElementWithPosition = (
@@ -162,22 +212,93 @@ export default function Page() {
 				return next;
 			}
 
+			// Helper function to find a block by ID recursively and insert after it
+			const findAndInsertAfterBlockId = (blocks: AnyBlock[]): AnyBlock[] => {
+				return blocks.map((b) => {
+					// For blocks with children (like Column, ColumnWrapper, Layout)
+					if ('children' in b && Array.isArray(b.children)) {
+						// Check if the block we're looking for is in this container's children
+						const childIndex = b.children.findIndex(
+							(child) => child.id === afterBlockId
+						);
+
+						if (childIndex !== -1) {
+							// Found the block in this container's children - insert after it
+							const newChildren = [...b.children];
+							newChildren.splice(childIndex + 1, 0, block);
+
+							// Create a properly typed copy based on block type
+							if (b.type === 'Column') {
+								return {
+									...b,
+									children: newChildren,
+								} as ColumnBlock;
+							} else if (b.type === 'ColumnWrapper') {
+								// For ColumnWrapper, we need to ensure children are ColumnBlocks
+								// This should only happen if afterBlockId is a Column
+								if (block.type !== 'Column') {
+									// Create a new Column to wrap the block
+									const columnBlock: ColumnBlock = {
+										id: `col-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+										type: 'Column',
+										props: {
+											backgroundColor: 'transparent',
+											padding: 16,
+										},
+										children: [block],
+									};
+
+									// Replace the block with the column block in our operation
+									const colChildren = [...b.children];
+									colChildren.splice(childIndex + 1, 0, columnBlock);
+
+									return {
+										...b,
+										children: colChildren,
+									} as ColumnWrapperBlock;
+								}
+
+								return {
+									...b,
+									children: newChildren,
+								} as ColumnWrapperBlock;
+							} else if (b.type === 'Layout') {
+								return {
+									...b,
+									children: newChildren,
+								} as LayoutBlock;
+							}
+						} else {
+							// Not found directly in this level, search deeper
+							return {
+								...b,
+								children: findAndInsertAfterBlockId(b.children),
+							} as AnyBlock;
+						}
+					}
+					return b;
+				});
+			};
+
+			// First check if the block is at top level
 			const insertIndex = activePage.blocks.findIndex(
 				(b) => b.id === afterBlockId
 			);
 
-			if (insertIndex === -1) {
-				next[activePageIndex] = {
-					...activePage,
-					blocks: [...activePage.blocks, block],
-				};
-			} else {
+			if (insertIndex !== -1) {
+				// Block is at top level, use the original logic
 				const newBlocks = [...activePage.blocks];
 				newBlocks.splice(insertIndex + 1, 0, block);
 
 				next[activePageIndex] = {
 					...activePage,
 					blocks: newBlocks,
+				};
+			} else {
+				// Block is probably nested, use recursive search
+				next[activePageIndex] = {
+					...activePage,
+					blocks: findAndInsertAfterBlockId(activePage.blocks),
 				};
 			}
 

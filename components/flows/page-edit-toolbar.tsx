@@ -396,13 +396,36 @@ const findBlockInPage = (
 	let foundBlock = blocks.find((b) => b.id === blockId);
 	if (foundBlock) return foundBlock;
 
-	// Then search in layout blocks' children
+	// Then search in nested blocks (Layout, Column, ColumnWrapper)
 	for (const block of blocks) {
-		if (block.type === 'Layout' && Array.isArray((block as any).children)) {
+		// Check if block has children property and it's an array
+		if (Array.isArray((block as any).children)) {
+			// First check direct children
 			foundBlock = (block as any).children.find(
 				(child: AnyBlock) => child.id === blockId
 			);
 			if (foundBlock) return foundBlock;
+
+			// Then recursively check grandchildren
+			for (const child of (block as any).children) {
+				if (Array.isArray((child as any).children)) {
+					// Check in column blocks and column wrapper blocks
+					foundBlock = (child as any).children.find(
+						(grandchild: AnyBlock) => grandchild.id === blockId
+					);
+					if (foundBlock) return foundBlock;
+
+					// One more level deeper for complex nesting (e.g., layout > column-wrapper > column > block)
+					for (const grandchild of (child as any).children || []) {
+						if (Array.isArray((grandchild as any).children)) {
+							foundBlock = (grandchild as any).children.find(
+								(greatGrandchild: AnyBlock) => greatGrandchild.id === blockId
+							);
+							if (foundBlock) return foundBlock;
+						}
+					}
+				}
+			}
 		}
 	}
 

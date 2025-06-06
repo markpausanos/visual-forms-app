@@ -23,6 +23,7 @@ import {
 	Trash2,
 	StickyNote,
 	Layout,
+	Grid,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,7 @@ import { AnyBlock } from '@/lib/types/block';
 import { uploadImageToStorage } from '@/actions/upload-storage';
 import { deleteUserImage, getUserImages } from '@/actions/storage';
 import { toast } from 'sonner';
+import { v4 as uuid } from 'uuid';
 
 // Element category types
 type ElementCategory = 'Basic' | 'Questions' | 'Form (Fields)';
@@ -258,6 +260,33 @@ export default function ElementToolbar({
 					);
 				} else {
 					onAddElement?.(createBlock('Layout', '<p>Hello</p>'));
+				}
+				onClose();
+			},
+		},
+		{
+			id: 'column-wrapper',
+			name: 'Columns',
+			icon: <Grid size={24} className="text-muted-foreground" />,
+			category: 'Basic',
+			onClick: () => {
+				// Create a layout block first, then add a column wrapper inside it
+				const columnWrapper = createBlock('ColumnWrapper');
+
+				// Create a layout block with the column wrapper as its only child
+				const layoutBlock = {
+					id: uuid(),
+					type: 'Layout',
+					props: {
+						gap: 16,
+					},
+					children: [columnWrapper],
+				};
+
+				if (insertAfterBlockId) {
+					onAddElementAfter?.(layoutBlock as AnyBlock, insertAfterBlockId);
+				} else {
+					onAddElement?.(layoutBlock as AnyBlock);
 				}
 				onClose();
 			},

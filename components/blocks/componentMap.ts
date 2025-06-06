@@ -3,6 +3,8 @@ import React from 'react';
 import TextBlock from './text-block';
 import ImageBlock from './image-block';
 import LayoutBlock from './layout-block';
+import ColumnWrapperBlock from './column-wrapper-block';
+import ColumnBlock from './column-block';
 import { AnyBlock } from '@/lib/types/block';
 
 export interface Page {
@@ -11,6 +13,7 @@ export interface Page {
 	blocks: AnyBlock[];
 }
 
+// Component map with components that can take extra props
 export const componentMap: Record<
 	AnyBlock['type'],
 	React.ComponentType<any>
@@ -18,4 +21,6 @@ export const componentMap: Record<
 	Text: TextBlock,
 	Image: ImageBlock,
 	Layout: LayoutBlock,
+	ColumnWrapper: ColumnWrapperBlock,
+	Column: ColumnBlock,
 };

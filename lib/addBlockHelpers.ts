@@ -5,6 +5,8 @@ import {
 	TextBlock,
 	ImageBlock,
 	LayoutBlock,
+	ColumnWrapperBlock,
+	ColumnBlock,
 } from '@/lib/types/block';
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
@@ -29,14 +31,17 @@ export function jsonToHTML(json: any) {
 	return html;
 }
 
-export function createBlock(type: AnyBlock['type'], payload: string): AnyBlock {
+export function createBlock(
+	type: AnyBlock['type'],
+	payload?: string
+): AnyBlock {
 	switch (type) {
 		case 'Text':
 			return {
 				id: uuid(),
 				type: 'Text',
 				props: {
-					html: payload,
+					html: payload || '<p>New text</p>',
 					textAlign: 'text-center',
 					size: 'text-base',
 				},
@@ -46,7 +51,7 @@ export function createBlock(type: AnyBlock['type'], payload: string): AnyBlock {
 				id: uuid(),
 				type: 'Image',
 				props: {
-					src: payload,
+					src: payload || '/placeholder-image.svg',
 					alt: 'Image',
 					aspectRatio: 'aspect-auto',
 					cornerRadius: 0,
@@ -60,25 +65,48 @@ export function createBlock(type: AnyBlock['type'], payload: string): AnyBlock {
 				id: uuid(),
 				type: 'Layout',
 				props: {
-					children: [
-						{
-							id: uuid(),
-							type: 'Text',
-							props: {
-								html: payload,
-							},
-						},
-						{
-							id: uuid(),
-							type: 'Text',
-							props: {
-								html: payload,
-							},
-						},
-					],
 					gap: 16,
 				},
+				children: [
+					{
+						id: uuid(),
+						type: 'Text',
+						props: {
+							html: payload || '<p>New text</p>',
+						},
+					},
+					{
+						id: uuid(),
+						type: 'Text',
+						props: {
+							html: payload || '<p>New text</p>',
+						},
+					},
+				],
 			} as LayoutBlock;
+		case 'ColumnWrapper':
+			return {
+				id: uuid(),
+				type: 'ColumnWrapper',
+				props: {
+					gap: 16,
+					backgroundColor: 'transparent',
+				},
+				children: [
+					createBlock('Column') as ColumnBlock,
+					createBlock('Column') as ColumnBlock,
+				],
+			} as ColumnWrapperBlock;
+		case 'Column':
+			return {
+				id: uuid(),
+				type: 'Column',
+				props: {
+					padding: 16,
+					backgroundColor: 'transparent',
+				},
+				children: [],
+			} as ColumnBlock;
 		default:
 			throw new Error(`Unknown block type: ${type}`);
 	}

@@ -5,6 +5,7 @@ import {
 	verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
+import { cn } from '@/lib/utils';
 
 export default function LayoutBlock({
 	block,
@@ -12,25 +13,29 @@ export default function LayoutBlock({
 	onSelect,
 	onAddBelow,
 	selectedBlockId,
+	previewMode = 'desktop',
 }: {
 	block: LayoutBlock;
 	onChange: (updated: LayoutBlock) => void;
 	onSelect: (block: AnyBlock) => void;
 	onAddBelow: (blockId: string) => void;
 	selectedBlockId: string | null;
+	previewMode?: 'desktop' | 'mobile';
 }) {
 	const gap = block.props?.gap || 16;
 	const children = Array.isArray(block.children) ? block.children : [];
 	const isSingle = children.length === 1;
 	const isOddNumber = children.length % 2 !== 0;
+	const isMobile = previewMode === 'mobile';
 
 	// Make the layout droppable
 	const { setNodeRef, isOver } = useDroppable({
 		id: block.id,
 	});
 
-	// Compute span at render time
+	// Compute span at render time - on mobile, all spans take full width
 	const getSpan = (index: number) => {
+		if (isMobile) return 2; // Mobile mode - all columns take full width
 		if (isSingle) return 2; // Single column takes full width
 		if (isOddNumber && index === children.length - 1) return 2; // Last column in odd-numbered layout takes full width
 		return 1; // All other columns take single span
@@ -73,9 +78,10 @@ export default function LayoutBlock({
 			}}
 		>
 			<div
-				className={`grid w-full gap-4 p-6 ${
-					isOver ? 'bg-blue-50 rounded-md transition-colors duration-200' : ''
-				}`}
+				className={cn(
+					'grid w-full gap-4 p-6',
+					isOver && 'bg-blue-50 rounded-md transition-colors duration-200'
+				)}
 				style={{
 					gap: `${gap}px`,
 					gridTemplateColumns: 'repeat(2, 1fr)',
@@ -107,6 +113,7 @@ export default function LayoutBlock({
 								onAddBelow={() => onAddBelow(child.id)}
 								onDelete={handleDeleteBlock}
 								parentBlockId={block.id}
+								previewMode={previewMode}
 							/>
 						</div>
 					))}

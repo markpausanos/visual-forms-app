@@ -30,12 +30,34 @@ export type LayoutBlockProps = {
 	gap?: number;
 };
 
+export type ColumnWrapperBlockProps = {
+	gap?: number;
+	backgroundColor?: string;
+};
+
+export type ColumnBlockProps = {
+	padding?: number;
+	backgroundColor?: string;
+};
+
 // Create specific block types
 export type TextBlock = Block<'Text', TextBlockProps>;
 export type ImageBlock = Block<'Image', ImageBlockProps>;
 export interface LayoutBlock extends Block<'Layout', LayoutBlockProps> {
 	children: AnyBlock[];
 }
+export interface ColumnWrapperBlock
+	extends Block<'ColumnWrapper', ColumnWrapperBlockProps> {
+	children: ColumnBlock[];
+}
+export interface ColumnBlock extends Block<'Column', ColumnBlockProps> {
+	children: AnyBlock[];
+}
 
 // Union type for all blocks
-export type AnyBlock = TextBlock | ImageBlock | LayoutBlock;
+export type AnyBlock =
+	| TextBlock
+	| ImageBlock
+	| LayoutBlock
+	| ColumnWrapperBlock
+	| ColumnBlock;

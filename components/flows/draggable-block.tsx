@@ -17,6 +17,7 @@ interface DraggableBlockProps {
 	onDelete?: (blockId: string) => void;
 	insertAfterBlockId?: string | null;
 	parentBlockId?: string;
+	previewMode?: 'desktop' | 'mobile';
 }
 
 export default function DraggableBlock({
@@ -27,6 +28,7 @@ export default function DraggableBlock({
 	onAddBelow,
 	onDelete,
 	parentBlockId,
+	previewMode = 'desktop',
 }: DraggableBlockProps) {
 	const {
 		attributes,
@@ -39,7 +41,9 @@ export default function DraggableBlock({
 		id: block.id,
 		animateLayoutChanges: () => false, // Custom animation handling
 		data: {
+			type: block.type,
 			parentBlockId: parentBlockId,
+			isNested: Boolean(parentBlockId), // Flag to indicate if this is a nested block
 		},
 	});
 
@@ -147,6 +151,7 @@ export default function DraggableBlock({
 					onDelete={onDelete}
 					onSelect={onSelect}
 					selectedBlockId={selectedBlockId}
+					previewMode={previewMode}
 				/>
 			</div>
 		</div>
